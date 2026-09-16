@@ -1,0 +1,31 @@
+server:
+  port: ${PAYMENT_SERVER_PORT:8081}
+
+spring:
+  application:
+    name: mdyaipay-payment
+  datasource:
+    url: ${PAYMENT_JDBC_URL:jdbc:mysql://127.0.0.1:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${PAYMENT_JDBC_USER:root}
+    password: ${PAYMENT_JDBC_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+payment:
+  jdbc:
+    init-schema: false
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-handlers-package: com.mdyaipay.payment.mybatis
+  configuration:
+    map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

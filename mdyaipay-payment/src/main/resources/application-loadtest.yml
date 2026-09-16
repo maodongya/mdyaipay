@@ -1,0 +1,11 @@
+# 本地压测：内存 H2 + 自动建表（mvn spring-boot:run -Dspring-boot.run.profiles=loadtest）
+spring:
+  datasource:
+    url: jdbc:h2:mem:mdyaipay_payment_loadtest;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema-mysql.sql

@@ -1,0 +1,24 @@
+name: payment-collect
+protocol: http
+load:
+  threads: 25
+  durationSeconds: 30
+  rampUpSeconds: 5
+  thinkTimeMillis: 0
+  targetRps: null
+metrics:
+  percentiles: [0.5, 0.9, 0.95, 0.99]
+  warmupSeconds: 3
+  recordErrors: true
+  maxErrorSamples: 50
+target:
+  url: http://127.0.0.1:8081/api/v1/payments/collect
+  method: POST
+  headers:
+    Content-Type: application/json
+  body: '{"orderNo":"LT-P-${threadIndex}-${iteration}","amount":100,"channel":"MOCK_QUICK"}'
+  timeoutMillis: 10000
+  expectStatus: [200]
+report:
+  formats: [console, json, markdown]
+  outputDir: target/loadtest-reports

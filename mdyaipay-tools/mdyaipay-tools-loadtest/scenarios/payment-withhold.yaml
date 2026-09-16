@@ -1,0 +1,24 @@
+name: payment-withhold
+protocol: http
+load:
+  threads: 20
+  durationSeconds: 30
+  rampUpSeconds: 5
+  thinkTimeMillis: 0
+  targetRps: null
+metrics:
+  percentiles: [0.5, 0.9, 0.95, 0.99]
+  warmupSeconds: 3
+  recordErrors: true
+  maxErrorSamples: 50
+target:
+  url: http://127.0.0.1:8081/api/v1/withholds
+  method: POST
+  headers:
+    Content-Type: application/json
+  body: '{"deductionNo":"LT-W-${threadIndex}-${iteration}","agreementNo":"AGR-1","amount":100,"channel":"MOCK_WH"}'
+  timeoutMillis: 10000
+  expectStatus: [200]
+report:
+  formats: [console, json, markdown]
+  outputDir: target/loadtest-reports

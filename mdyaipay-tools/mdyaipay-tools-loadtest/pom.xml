@@ -1,0 +1,25 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.mdyaipay</groupId>
+        <artifactId>mdyaipay-tools</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mdyaipay-tools-loadtest</artifactId>
+    <packaging>pom</packaging>
+    <name>mdyaipay-tools-loadtest</name>
+    <description>压测工具聚合：core（引擎/指标/报告）与 protocol 驱动（HTTP、Dubbo、Spring Cloud）</description>
+
+    <modules>
+        <module>mdyaipay-tools-loadtest-core</module>
+        <module>mdyaipay-tools-loadtest-http</module>
+        <module>mdyaipay-tools-loadtest-dubbo</module>
+        <module>mdyaipay-tools-loadtest-springcloud</module>
+        <module>mdyaipay-tools-loadtest-cli</module>
+    </modules>
+</project>

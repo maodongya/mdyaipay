@@ -1,0 +1,53 @@
+server:
+  port: ${MDYAIPAY_GATEWAY_PORT:8041}
+
+spring:
+  application:
+    name: mdyaipay-gateway
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:3000}
+        response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:10s}
+      default-filters:
+        - AddResponseHeader=X-Gateway, mdyaipay
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: ${GATEWAY_ALLOWED_ORIGINS:*}
+            allowedMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+            allowedHeaders: "*"
+            allowCredentials: false
+      routes:
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - StripPrefix=0
+        - id: withhold-service
+          uri: ${WITHHOLD_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/withholds/**
+          filters:
+            - StripPrefix=0
+        - id: payout-service
+          uri: ${PAYOUT_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/payouts/**
+          filters:
+            - StripPrefix=0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

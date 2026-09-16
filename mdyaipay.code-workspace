@@ -1,0 +1,23 @@
+{
+  "folders": [
+    {
+      "name": "mdyaipay",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "java.import.maven.enabled": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.maven.recursive": true,
+    "java.test.editor.enableShortcuts": true,
+    "java.test.config": {
+      "workingDirectory": "${workspaceFolder}",
+      "vmArgs": [
+        "-javaagent:${workspaceFolder}/mdyaipay-tools/mdyaipay-tools-timetrace/target/aspectjweaver.jar"
+      ]
+    }
+  },
+  "extensions": {
+    "recommendations": ["vscjava.vscode-java-pack"]
+  }
+}

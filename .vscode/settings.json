@@ -1,0 +1,8 @@
+{
+  "java.import.maven.enabled": true,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.recursive": true,
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "java.test.editor.enableShortcuts": true,
+  "java.compile.nullAnalysis.mode": "disabled"
+}

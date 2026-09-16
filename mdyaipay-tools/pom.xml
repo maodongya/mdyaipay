@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.mdyaipay</groupId>
+        <artifactId>mdyaipay</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mdyaipay-tools</artifactId>
+    <packaging>pom</packaging>
+    <name>mdyaipay-tools</name>
+    <description>公共工具聚合：common、timetrace、loadtest 等无业务编排工具</description>
+
+    <modules>
+        <module>mdyaipay-tools-common</module>
+        <module>mdyaipay-tools-timetrace</module>
+        <module>mdyaipay-tools-loadtest</module>
+    </modules>
+</project>
