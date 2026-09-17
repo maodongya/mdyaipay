@@ -66,7 +66,7 @@ public class PaymentApplicationService {
         }
 
         PaymentOrder order = new PaymentOrder(orderNo, amount, channel, productType, merchantId);
-        orderRepository.save(order);
+        // orderRepository.save(order);
         order.markProcessing();
         orderRepository.save(order);
 

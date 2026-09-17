@@ -1,9 +1,9 @@
-# 网关加密收单约 5 万笔：50 并发 × ~70s 正式阶段（视本机 TPS 微调 durationSeconds）
+# 网关加密收单约 5 万笔：本机约 270 TPS 时可设 threads=35、durationSeconds=180
 name: gateway-collect-50k
 protocol: http
 load:
-  threads: 50
-  durationSeconds: 70
+  threads: 35
+  durationSeconds: 180
   rampUpSeconds: 10
   thinkTimeMillis: 0
   targetRps: null

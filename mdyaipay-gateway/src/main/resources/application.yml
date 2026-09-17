@@ -5,7 +5,7 @@ mdyaipay:
   gateway:
     user-base-url: ${USER_BASE_URL:http://127.0.0.1:8082}
     # 本地压测走 payment 内网 HTTP；生产留空并依赖 Dubbo
-    payment-base-url: ${PAYMENT_BASE_URL:}
+    payment-base-url: ${PAYMENT_BASE_URL:http://127.0.0.1:8081}
     payment-dubbo-url: ${PAYMENT_DUBBO_URL:}
 
 spring:

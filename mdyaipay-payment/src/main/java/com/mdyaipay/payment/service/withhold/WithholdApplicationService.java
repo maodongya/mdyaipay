@@ -4,6 +4,7 @@ import com.mdyaipay.payment.domain.withhold.WithholdGateway;
 import com.mdyaipay.payment.domain.withhold.WithholdOrder;
 import com.mdyaipay.payment.domain.withhold.WithholdOrderRepository;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
+import com.mdyaipay.tools.timetrace.TimeTrace;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -29,6 +30,7 @@ public class WithholdApplicationService {
     /**
      * 发起代扣。幂等：{@code deductionNo} 已存在则直接返回；blank 时服务端生成单号。
      */
+    @TimeTrace(value = "WithholdApplicationService.createAndDeduct",reportThresholdMillis=100)
     public WithholdOrder createAndDeduct(String deductionNo, String agreementNo, long amount, String channel) {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than 0");
@@ -42,7 +44,7 @@ public class WithholdApplicationService {
         }
 
         WithholdOrder order = new WithholdOrder(deductionNo, agreementNo, amount, channel);
-        orderRepository.save(order);
+        // orderRepository.save(order);
         order.markProcessing();
         orderRepository.save(order);
 
