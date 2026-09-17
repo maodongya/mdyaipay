@@ -1,5 +1,8 @@
 package com.mdyaipay.user.api.merchant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -19,12 +22,13 @@ public final class MerchantSignEnvelope implements Serializable {
     private final String signMethod;
     private final String sign;
 
+    @JsonCreator
     public MerchantSignEnvelope(
-            String appKey,
-            long timestampMillis,
-            String nonce,
-            String signMethod,
-            String sign) {
+            @JsonProperty("appKey") String appKey,
+            @JsonProperty("timestampMillis") long timestampMillis,
+            @JsonProperty("nonce") String nonce,
+            @JsonProperty("signMethod") String signMethod,
+            @JsonProperty("sign") String sign) {
         this.appKey = Objects.requireNonNull(appKey, "appKey must not be null");
         this.nonce = Objects.requireNonNull(nonce, "nonce must not be null");
         this.signMethod = Objects.requireNonNull(signMethod, "signMethod must not be null");

@@ -1,5 +1,8 @@
 package com.mdyaipay.user.api.merchant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -11,7 +14,10 @@ public final class ApproveMerchantCommand implements Serializable {
     private final long merchantId;
     private final String auditor;
 
-    public ApproveMerchantCommand(long merchantId, String auditor) {
+    @JsonCreator
+    public ApproveMerchantCommand(
+            @JsonProperty("merchantId") long merchantId,
+            @JsonProperty("auditor") String auditor) {
         if (merchantId <= 0) {
             throw new IllegalArgumentException("merchantId must be positive");
         }

@@ -43,6 +43,18 @@
 3. 按 key 字典序拼 `k=v&…`，HMAC-SHA256(secret) → 小写 hex，填入 `sign`。
 4. 请求体携带 `MerchantSignEnvelope` + 业务字段。
 
+## 商户凭证落库
+
+| 表 | 说明 |
+|----|------|
+| `merchant_api_credential` | 商户开放 API 凭证：`app_key` 唯一；`secret_cipher` 为 AES-GCM 密文；`status` 为 `ACTIVE`/`DISABLED` |
+
+- **签发**：`POST /api/v1/merchants/credentials/issue` → `MerchantApplicationService#issueApiCredential` → `MerchantApiCredentialRepository#save`（MyBatis `upsert`）。
+- **网关解析**：按 `appKey` 查表解密，见 `MerchantOpenApiCredentialService` / `MerchantGatewayInternalController`。
+- **压测**：`scripts/seed-loadtest-merchant.py` 走签发 API，库内已有密文；`target/loadtest-merchant-credentials.json` 仅保存**签发时返回一次的明文**供压测构造签名（不可从库中反查明文给客户端）。
+
+启动时 `user.jdbc.init-schema=true` 会执行 `db/schema-merchant-mysql.sql` 与增量 `db/patch-merchant-mysql.sql`（补建凭证表）。
+
 ## 启动
 
 ```bash

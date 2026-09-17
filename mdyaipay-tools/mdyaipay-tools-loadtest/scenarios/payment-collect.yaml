@@ -20,6 +20,7 @@ target:
     Content-Type: application/json
   bodyMode: merchantEncryptedCollect
   merchantEncryptedCollect:
+    credentialsFile: target/loadtest-merchant-credentials.json
     amount: 100
     channel: MOCK
     productType: QUICK_COLLECTION

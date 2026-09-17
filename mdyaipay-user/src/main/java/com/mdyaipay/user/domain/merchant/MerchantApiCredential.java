@@ -3,7 +3,10 @@ package com.mdyaipay.user.domain.merchant;
 import java.time.Instant;
 import java.util.Objects;
 
-/** 商户开放 API 密钥实体：验签时使用 {@code secretPlain}，禁止写入日志。 */
+/**
+ * 商户开放 API 密钥实体，持久化表 {@code merchant_api_credential}。
+ * <p>验签时使用 {@code secretPlain}（由 dao 从 {@code secret_cipher} 解密），禁止写入日志。</p>
+ */
 public final class MerchantApiCredential {
 
     private final long credentialId;

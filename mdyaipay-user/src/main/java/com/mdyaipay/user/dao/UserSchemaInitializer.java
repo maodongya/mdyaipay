@@ -9,7 +9,8 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 /**
- * 启动时执行 {@code db/schema-merchant-mysql.sql}（与 payment 模块 init-schema 模式一致）。
+ * 启动时执行商户域 DDL（与 payment 模块 init-schema 模式一致）。
+ * <p>全量 {@code schema-merchant-mysql.sql} + 增量 {@code patch-merchant-mysql.sql}（补商户凭证表等）。</p>
  */
 public final class UserSchemaInitializer {
 
@@ -18,10 +19,22 @@ public final class UserSchemaInitializer {
 
     public static void apply(DataSource dataSource) {
         Objects.requireNonNull(dataSource, "dataSource must not be null");
-        executeScript(dataSource, "db/schema-merchant-mysql.sql");
+        executeScript(dataSource, "db/schema-merchant-mysql.sql", false);
+        if (isMySql(dataSource)) {
+            executeScript(dataSource, "db/patch-merchant-mysql.sql", true);
+        }
     }
 
-    private static void executeScript(DataSource dataSource, String classpathResource) {
+    private static boolean isMySql(DataSource dataSource) {
+        try (Connection conn = dataSource.getConnection()) {
+            String product = conn.getMetaData().getDatabaseProductName();
+            return product != null && product.toLowerCase().contains("mysql");
+        } catch (SQLException ex) {
+            throw new IllegalStateException("failed to detect database product", ex);
+        }
+    }
+
+    private static void executeScript(DataSource dataSource, String classpathResource, boolean ignoreDuplicate) {
         String ddl;
         try (var in = UserSchemaInitializer.class.getClassLoader().getResourceAsStream(classpathResource)) {
             if (in == null) {
@@ -39,9 +52,20 @@ public final class UserSchemaInitializer {
             try (Connection conn = dataSource.getConnection(); Statement st = conn.createStatement()) {
                 st.execute(sql);
             } catch (SQLException ex) {
+                if (ignoreDuplicate && (isDuplicateIndex(ex) || isDuplicateColumn(ex))) {
+                    continue;
+                }
                 throw new IllegalStateException("schema statement failed: " + sql, ex);
             }
         }
+    }
+
+    private static boolean isDuplicateIndex(SQLException ex) {
+        return ex.getErrorCode() == 1061;
+    }
+
+    private static boolean isDuplicateColumn(SQLException ex) {
+        return ex.getErrorCode() == 1060;
     }
 
     private static String stripSqlComments(String block) {

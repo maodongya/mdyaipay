@@ -5,13 +5,10 @@ import com.mdyaipay.user.api.merchant.gateway.MerchantGatewayFacade;
 import com.mdyaipay.user.api.merchant.gateway.ResolveOpenApiCredentialQuery;
 import com.mdyaipay.user.api.merchant.gateway.ResolveOpenApiCredentialResult;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.springframework.stereotype.Component;
-
-/** Spring 网关默认：经 Dubbo 向 user 查询商户开放 API 凭证（含明文 appSecret，禁止打日志）。 */
-@Component
+/** 可选：经 Dubbo 向 user 查询凭证（生产同机房可用；本地默认 {@link HttpOpenApiCredentialResolver}）。 */
 public class DubboOpenApiCredentialResolver implements OpenApiCredentialResolver {
 
-    @DubboReference(version = "1.0.0", check = false)
+    @DubboReference(version = "1.0.0", check = false, protocol = "tri")
     private MerchantGatewayFacade merchantGatewayFacade;
 
     @Override

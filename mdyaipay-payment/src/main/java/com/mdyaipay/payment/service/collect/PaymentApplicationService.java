@@ -7,6 +7,8 @@ import com.mdyaipay.payment.domain.collect.PaymentProductType;
 import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
+import com.mdyaipay.tools.timetrace.TimeTrace;
+
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -43,6 +45,7 @@ public class PaymentApplicationService {
      * 发起收单：仅支持 {@link PaymentProductType#QUICK_COLLECTION} 与 {@link PaymentProductType#ONLINE_BANKING}。
      * 代扣、代付请使用对应应用服务。
      */
+    @TimeTrace(value = "PaymentApplicationService.createAndPay",reportThresholdMillis=100)
     public PaymentOrder createAndPay(
             Long merchantId, String orderNo, long amount, String channel, PaymentProductType productType) {
         if (productType != PaymentProductType.QUICK_COLLECTION && productType != PaymentProductType.ONLINE_BANKING) {

@@ -2,7 +2,7 @@ package com.mdyaipay.gateway.payment;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mdyaipay.gateway.dubbo.PaymentGatewayDubboClient;
+import com.mdyaipay.gateway.dubbo.PaymentGatewayClient;
 import com.mdyaipay.payment.api.gateway.command.ChannelConfirmCommand;
 import com.mdyaipay.payment.api.gateway.command.CreatePayoutCommand;
 import com.mdyaipay.payment.api.gateway.command.CreateWithholdCommand;
@@ -33,10 +33,10 @@ public class PaymentDubboGatewayFilter implements GlobalFilter, Ordered {
     private static final Pattern PAYMENT_GET = Pattern.compile("^/api/v1/payments/([^/]+)$");
     private static final Pattern PAYMENT_CONFIRM = Pattern.compile("^/api/v1/payments/([^/]+)/channel-confirm$");
 
-    private final PaymentGatewayDubboClient paymentClient;
+    private final PaymentGatewayClient paymentClient;
     private final ObjectMapper json;
 
-    public PaymentDubboGatewayFilter(PaymentGatewayDubboClient paymentClient, ObjectMapper json) {
+    public PaymentDubboGatewayFilter(PaymentGatewayClient paymentClient, ObjectMapper json) {
         this.paymentClient = paymentClient;
         this.json = json;
     }

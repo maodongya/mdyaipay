@@ -2,7 +2,7 @@ package com.mdyaipay.gateway.payment;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mdyaipay.gateway.dubbo.PaymentGatewayDubboClient;
+import com.mdyaipay.gateway.dubbo.PaymentGatewayClient;
 import com.mdyaipay.payment.api.gateway.command.CollectPaymentCommand;
 import com.mdyaipay.tools.model.ApiResponse;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -29,13 +29,13 @@ public class MerchantSignedCollectGatewayFilter implements GlobalFilter, Ordered
     private static final String COLLECT_PATH = "/api/v1/payments/collect";
 
     private final OpenApiCredentialResolver credentialResolver;
-    private final PaymentGatewayDubboClient paymentClient;
+    private final PaymentGatewayClient paymentClient;
     private final MerchantSignedCollectProcessor processor;
     private final ObjectMapper json;
 
     public MerchantSignedCollectGatewayFilter(
             OpenApiCredentialResolver credentialResolver,
-            PaymentGatewayDubboClient paymentClient,
+            PaymentGatewayClient paymentClient,
             ObjectMapper json) {
         this.credentialResolver = credentialResolver;
         this.paymentClient = paymentClient;

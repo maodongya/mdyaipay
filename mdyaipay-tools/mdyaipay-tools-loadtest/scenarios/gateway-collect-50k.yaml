@@ -1,17 +1,15 @@
-# 对外模式：经网关加密收单。运行前请设置：
-#   LOADTEST_MERCHANT_APP_KEY / LOADTEST_MERCHANT_APP_SECRET / LOADTEST_MERCHANT_ID
-# （由 user 模块 issueApiCredential 签发，商户须 ENABLED）
-name: gateway-collect
+# 网关加密收单约 5 万笔：50 并发 × ~70s 正式阶段（视本机 TPS 微调 durationSeconds）
+name: gateway-collect-50k
 protocol: http
 load:
-  threads: 25
-  durationSeconds: 30
-  rampUpSeconds: 5
+  threads: 50
+  durationSeconds: 70
+  rampUpSeconds: 10
   thinkTimeMillis: 0
   targetRps: null
 metrics:
   percentiles: [0.5, 0.9, 0.95, 0.99]
-  warmupSeconds: 3
+  warmupSeconds: 5
   recordErrors: true
   maxErrorSamples: 50
 target:
@@ -25,8 +23,8 @@ target:
     amount: 100
     channel: MOCK
     productType: QUICK_COLLECTION
-    orderNoPrefix: LT-GW-
-  timeoutMillis: 10000
+    orderNoPrefix: LT-50K-
+  timeoutMillis: 15000
   expectStatus: [200]
 report:
   formats: [console, json, markdown]

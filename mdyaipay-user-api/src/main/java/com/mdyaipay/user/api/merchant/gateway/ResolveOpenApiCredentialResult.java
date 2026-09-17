@@ -1,5 +1,8 @@
 package com.mdyaipay.user.api.merchant.gateway;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 
 /**
@@ -14,7 +17,11 @@ public final class ResolveOpenApiCredentialResult implements Serializable {
     private final String appSecretPlain;
     private final long maxSkewSeconds;
 
-    public ResolveOpenApiCredentialResult(long merchantId, String appSecretPlain, long maxSkewSeconds) {
+    @JsonCreator
+    public ResolveOpenApiCredentialResult(
+            @JsonProperty("merchantId") long merchantId,
+            @JsonProperty("appSecretPlain") String appSecretPlain,
+            @JsonProperty("maxSkewSeconds") long maxSkewSeconds) {
         if (merchantId <= 0) {
             throw new IllegalArgumentException("merchantId must be positive");
         }

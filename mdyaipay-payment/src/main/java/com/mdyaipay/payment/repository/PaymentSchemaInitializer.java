@@ -20,6 +20,7 @@ public final class PaymentSchemaInitializer {
         Objects.requireNonNull(dataSource, "dataSource must not be null");
         executeScript(dataSource, "db/schema-mysql.sql", false);
         if (isMySql(dataSource)) {
+            executeScript(dataSource, "db/patch-mysql.sql", true);
             executeScript(dataSource, "db/indexes-mysql.sql", true);
         }
     }
@@ -51,7 +52,7 @@ public final class PaymentSchemaInitializer {
             try (Connection conn = dataSource.getConnection(); Statement st = conn.createStatement()) {
                 st.execute(sql);
             } catch (SQLException ex) {
-                if (ignoreDuplicateIndex && isDuplicateIndex(ex)) {
+                if (ignoreDuplicateIndex && (isDuplicateIndex(ex) || isDuplicateColumn(ex))) {
                     continue;
                 }
                 throw new IllegalStateException("schema statement failed: " + sql, ex);
@@ -62,6 +63,11 @@ public final class PaymentSchemaInitializer {
     /** MySQL/MariaDB：索引名已存在 */
     private static boolean isDuplicateIndex(SQLException ex) {
         return ex.getErrorCode() == 1061;
+    }
+
+    /** MySQL：列已存在 */
+    private static boolean isDuplicateColumn(SQLException ex) {
+        return ex.getErrorCode() == 1060;
     }
 
     private static String stripSqlComments(String block) {

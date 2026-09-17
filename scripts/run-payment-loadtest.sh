@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# 启动 user / payment / gateway（若未就绪），造压测商户，跑加密收单压测。
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+export DUBBO_REGISTRY_ADDRESS="${DUBBO_REGISTRY_ADDRESS:-zookeeper://127.0.0.1:2181}"
+stop_local_services() {
+  for port in 8081 8082 8041 20881 20882; do
+    lsof -ti:"$port" 2>/dev/null | xargs kill -9 2>/dev/null || true
+  done
+  rm -f "$HOME/.dubbo/dubbo-registry-"*127.0.0.1-2181.cache 2>/dev/null || true
+}
+stop_local_services
+sleep 2
+
+export PAYMENT_BASE_URL="${PAYMENT_BASE_URL:-http://127.0.0.1:8081}"
+echo "installing API modules to local Maven repo ..."
+mvn -q -pl mdyaipay-user-api,mdyaipay-payment-api,mdyaipay-tools/mdyaipay-tools-common -am install -DskipTests
+
+LOG_DIR="$ROOT/target/local-services"
+CRED_FILE="$ROOT/target/loadtest-merchant-credentials.json"
+mkdir -p "$LOG_DIR"
+
+wait_health() {
+  local url=$1 name=$2
+  for i in $(seq 1 90); do
+    if curl -sf "$url" >/dev/null 2>&1; then
+      echo "$name ready"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "$name not healthy: $url" >&2
+  return 1
+}
+
+start_if_needed() {
+  local port=$1 name=$2 module=$3 log=$4
+  shift 4
+  if curl -sf "http://127.0.0.1:${port}/actuator/health" >/dev/null 2>&1; then
+    echo "$name already on :$port"
+    return 0
+  fi
+  echo "starting $name ..."
+  (cd "$module" && env "$@" mvn -q spring-boot:run >"$log" 2>&1) &
+  echo $! >> "$LOG_DIR/pids.txt"
+}
+
+: > "$LOG_DIR/pids.txt"
+start_if_needed 8082 user "$ROOT/mdyaipay-user" "$LOG_DIR/user.log" DUBBO_PORT=20882
+start_if_needed 8081 payment "$ROOT/mdyaipay-payment" "$LOG_DIR/payment.log" DUBBO_PORT=20881
+start_if_needed 8041 gateway "$ROOT/mdyaipay-gateway" "$LOG_DIR/gateway.log" \
+  PAYMENT_BASE_URL="$PAYMENT_BASE_URL"
+
+wait_health "http://127.0.0.1:8082/actuator/health" user
+wait_health "http://127.0.0.1:8081/actuator/health" payment
+wait_health "http://127.0.0.1:8041/actuator/health" gateway
+
+echo "waiting for Dubbo providers to settle ..."
+sleep 15
+
+python3 "$ROOT/scripts/seed-loadtest-merchant.py"
+test -f "$CRED_FILE"
+export LOADTEST_MERCHANT_CREDENTIALS_FILE="$CRED_FILE"
+
+SCENARIO="${1:-mdyaipay-tools/mdyaipay-tools-loadtest/scenarios/payment-collect-smoke.yaml}"
+SCENARIO_ABS="$ROOT/$SCENARIO"
+echo "loadtest scenario: $SCENARIO_ABS"
+# exec:java 子进程可能读不到 shell 环境变量，场景 YAML 内 credentialsFile 指向 CRED_FILE
+mvn -q -f "$ROOT/mdyaipay-tools/mdyaipay-tools-loadtest/mdyaipay-tools-loadtest-cli/pom.xml" \
+  -am exec:java \
+  -Dexec.args="$SCENARIO_ABS" \
+  -Dexec.workingdir="$ROOT"

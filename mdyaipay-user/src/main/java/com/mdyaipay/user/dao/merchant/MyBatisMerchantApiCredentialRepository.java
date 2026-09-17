@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * API Secret 落库为 AES 密文，验签时在内存解密（不落日志）。
+ * 商户凭证 MyBatis 仓储：表 {@code merchant_api_credential}，Secret 落库为 AES 密文，验签时在内存解密（不落日志）。
  */
 @Repository
 public class MyBatisMerchantApiCredentialRepository implements MerchantApiCredentialRepository {

@@ -1,5 +1,8 @@
 package com.mdyaipay.payment.api.gateway.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.time.Instant;
 
@@ -17,15 +20,16 @@ public final class PaymentOrderView implements Serializable {
     private final Instant createdAt;
     private final Instant updatedAt;
 
+    @JsonCreator
     public PaymentOrderView(
-            String orderNo,
-            Long merchantId,
-            long amount,
-            String channel,
-            String productType,
-            String status,
-            Instant createdAt,
-            Instant updatedAt) {
+            @JsonProperty("orderNo") String orderNo,
+            @JsonProperty("merchantId") Long merchantId,
+            @JsonProperty("amount") long amount,
+            @JsonProperty("channel") String channel,
+            @JsonProperty("productType") String productType,
+            @JsonProperty("status") String status,
+            @JsonProperty("createdAt") Instant createdAt,
+            @JsonProperty("updatedAt") Instant updatedAt) {
         this.orderNo = orderNo;
         this.merchantId = merchantId;
         this.amount = amount;

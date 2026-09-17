@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS merchant_member (
     KEY idx_merchant_member_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 商户开放 API 凭证表：签发时写入；secret 仅存 secret_cipher（AES），明文仅签发响应一次
 CREATE TABLE IF NOT EXISTS merchant_api_credential (
     credential_id   BIGINT       NOT NULL PRIMARY KEY,
     merchant_id     BIGINT       NOT NULL,

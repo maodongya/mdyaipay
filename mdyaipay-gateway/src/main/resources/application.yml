@@ -1,11 +1,24 @@
 server:
   port: ${MDYAIPAY_GATEWAY_PORT:8041}
 
+mdyaipay:
+  gateway:
+    user-base-url: ${USER_BASE_URL:http://127.0.0.1:8082}
+    # 本地压测走 payment 内网 HTTP；生产留空并依赖 Dubbo
+    payment-base-url: ${PAYMENT_BASE_URL:}
+    payment-dubbo-url: ${PAYMENT_DUBBO_URL:}
+
 spring:
   application:
     name: mdyaipay-gateway
   cloud:
     gateway:
+      # 业务由 GlobalFilter + Dubbo 处理，无真实下游；须声明路由否则 SCG 直接 404
+      routes:
+        - id: mdyaipay-open-api
+          uri: no://op
+          predicates:
+            - Path=/api/v1/**
       httpclient:
         connect-timeout: ${GATEWAY_CONNECT_TIMEOUT_MS:3000}
         response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:10s}
@@ -42,3 +55,4 @@ dubbo:
   consumer:
     check: false
     timeout: 30000
+    enable-connectivity-check: false

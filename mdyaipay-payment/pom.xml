@@ -85,6 +85,17 @@
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo-registry-zookeeper</artifactId>
         </dependency>
+        <!-- Dubbo JSON 工具 SPI 在 dubbo 协议导出时需要（与 tests 的 classpath 对齐） -->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.53</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.83</version>
+        </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
             <artifactId>mdyaipay-tools-timetrace</artifactId>

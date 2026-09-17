@@ -1,8 +1,7 @@
 package com.mdyaipay.gateway.payment;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mdyaipay.tools.model.ApiResponse;
 import com.mdyaipay.user.api.merchant.gateway.ResolveOpenApiCredentialResult;
 
 import java.net.URI;
@@ -37,13 +36,19 @@ public final class HttpOpenApiCredentialResolver implements OpenApiCredentialRes
                     .header("Accept", "application/json")
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            ApiResponse<ResolveOpenApiCredentialResult> body = json.readValue(
-                    response.body(), new TypeReference<>() {});
-            if (response.statusCode() != 200 || body == null || body.getCode() != 0 || body.getData() == null) {
-                String msg = body != null ? body.getMessage() : "http " + response.statusCode();
-                throw MerchantSignedCollectException.credentialFailed(msg);
+            if (response.statusCode() != 200) {
+                throw MerchantSignedCollectException.credentialFailed("http " + response.statusCode());
             }
-            return body.getData();
+            JsonNode root = json.readTree(response.body());
+            int code = root.path("code").asInt(-1);
+            if (code != 0) {
+                throw MerchantSignedCollectException.credentialFailed(root.path("message").asText("credential denied"));
+            }
+            JsonNode data = root.get("data");
+            if (data == null || data.isNull()) {
+                throw MerchantSignedCollectException.credentialFailed("empty credential data");
+            }
+            return json.treeToValue(data, ResolveOpenApiCredentialResult.class);
         } catch (MerchantSignedCollectException ex) {
             throw ex;
         } catch (Exception ex) {

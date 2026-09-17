@@ -5,6 +5,8 @@ import com.mdyaipay.tools.loadtest.model.LoadTestRunContext;
 import com.mdyaipay.tools.merchant.MerchantOpenApiPayloadCipher;
 import com.mdyaipay.tools.merchant.MerchantOpenApiSignatures;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,13 +25,16 @@ public final class MerchantEncryptedCollectBodyBuilder {
 
     public static String build(Map<String, Object> collectTarget, LoadTestRunContext runContext) throws Exception {
         Objects.requireNonNull(collectTarget, "collectTarget");
-        String appKey = resolveSecret(collectTarget, "appKey", "LOADTEST_MERCHANT_APP_KEY");
-        String appSecret = resolveSecret(collectTarget, "appSecret", "LOADTEST_MERCHANT_APP_SECRET");
-        long merchantId = longValue(collectTarget, "merchantId", envLong("LOADTEST_MERCHANT_ID", 0L));
-        long amount = longValue(collectTarget, "amount", 100L);
-        String channel = stringValue(collectTarget, "channel", "MOCK");
-        String productType = stringValue(collectTarget, "productType", "QUICK_COLLECTION");
-        String orderPrefix = stringValue(collectTarget, "orderNoPrefix", "LT-C-");
+        Map<String, Object> merged = new LinkedHashMap<>(collectTarget);
+        mergeCredentialsFile(merged);
+
+        String appKey = resolveSecret(merged, "appKey", "LOADTEST_MERCHANT_APP_KEY");
+        String appSecret = resolveSecret(merged, "appSecret", "LOADTEST_MERCHANT_APP_SECRET");
+        long merchantId = longValue(merged, "merchantId", envLong("LOADTEST_MERCHANT_ID", 0L));
+        long amount = longValue(merged, "amount", 100L);
+        String channel = stringValue(merged, "channel", "MOCK");
+        String productType = stringValue(merged, "productType", "QUICK_COLLECTION");
+        String orderPrefix = stringValue(merged, "orderNoPrefix", "LT-C-");
         String orderNo = orderPrefix + runContext.iteration() + "-" + runContext.threadIndex();
 
         if (appKey == null || appKey.isBlank()) {
@@ -69,6 +74,30 @@ public final class MerchantEncryptedCollectBodyBuilder {
         outer.put("sign", sign);
         outer.put("payload", payloadCipher);
         return JSON.writeValueAsString(outer);
+    }
+
+    /**
+     * 可选 {@code credentialsFile}：JSON 含 {@code appKey}、{@code appSecret}、{@code merchantId}（由 seed 脚本生成）。
+     */
+    @SuppressWarnings("unchecked")
+    private static void mergeCredentialsFile(Map<String, Object> target) throws Exception {
+        Object pathObj = target.get("credentialsFile");
+        String pathRaw = pathObj == null || String.valueOf(pathObj).isBlank()
+                ? System.getenv("LOADTEST_MERCHANT_CREDENTIALS_FILE")
+                : String.valueOf(pathObj);
+        if (pathRaw == null || pathRaw.isBlank()) {
+            return;
+        }
+        Path path = Path.of(pathRaw);
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalArgumentException("credentialsFile not found: " + path);
+        }
+        Map<String, Object> file = JSON.readValue(Files.readString(path), Map.class);
+        file.forEach((k, v) -> {
+            if (!target.containsKey(k) || target.get(k) == null) {
+                target.put(k, v);
+            }
+        });
     }
 
     private static String resolveSecret(Map<String, Object> target, String yamlKey, String envKey) {

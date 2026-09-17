@@ -1,5 +1,8 @@
 package com.mdyaipay.user.api.merchant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -12,7 +15,11 @@ public final class SubmitMerchantAuditRequest implements Serializable {
     private final long merchantId;
     private final long operatorUserId;
 
-    public SubmitMerchantAuditRequest(MerchantSignEnvelope signature, long merchantId, long operatorUserId) {
+    @JsonCreator
+    public SubmitMerchantAuditRequest(
+            @JsonProperty("signature") MerchantSignEnvelope signature,
+            @JsonProperty("merchantId") long merchantId,
+            @JsonProperty("operatorUserId") long operatorUserId) {
         this.signature = Objects.requireNonNull(signature, "signature must not be null");
         if (merchantId <= 0 || operatorUserId <= 0) {
             throw new IllegalArgumentException("merchantId and operatorUserId must be positive");

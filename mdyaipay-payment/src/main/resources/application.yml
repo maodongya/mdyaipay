@@ -40,6 +40,7 @@ dubbo:
   protocol:
     name: dubbo
     port: ${DUBBO_PORT:20881}
+    host: 0.0.0.0
   registry:
     address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
 

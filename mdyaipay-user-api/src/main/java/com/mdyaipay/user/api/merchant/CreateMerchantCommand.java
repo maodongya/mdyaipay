@@ -1,5 +1,8 @@
 package com.mdyaipay.user.api.merchant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -11,7 +14,10 @@ public final class CreateMerchantCommand implements Serializable {
     private final String merchantName;
     private final long ownerUserId;
 
-    public CreateMerchantCommand(String merchantName, long ownerUserId) {
+    @JsonCreator
+    public CreateMerchantCommand(
+            @JsonProperty("merchantName") String merchantName,
+            @JsonProperty("ownerUserId") long ownerUserId) {
         this.merchantName = Objects.requireNonNull(merchantName, "merchantName must not be null");
         if (ownerUserId <= 0) {
             throw new IllegalArgumentException("ownerUserId must be positive");

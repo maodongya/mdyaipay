@@ -1,5 +1,8 @@
 package com.mdyaipay.payment.api.gateway.command;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 
 /** 网关经 Dubbo 发起收单：金额单位为分；{@code productType} 可为空（默认快捷收单）。 */
@@ -13,7 +16,13 @@ public final class CollectPaymentCommand implements Serializable {
     private final String channel;
     private final String productType;
 
-    public CollectPaymentCommand(Long merchantId, String orderNo, long amount, String channel, String productType) {
+    @JsonCreator
+    public CollectPaymentCommand(
+            @JsonProperty("merchantId") Long merchantId,
+            @JsonProperty("orderNo") String orderNo,
+            @JsonProperty("amount") long amount,
+            @JsonProperty("channel") String channel,
+            @JsonProperty("productType") String productType) {
         this.merchantId = merchantId;
         this.orderNo = orderNo;
         this.amount = amount;
