@@ -3,13 +3,13 @@
 <mapper namespace="com.mdyaipay.payment.mybatis.mapper.PaymentOrderMapper">
 
     <insert id="upsert">
-        INSERT INTO payment_order (order_no, amount, channel, product_type, status, created_at, updated_at)
-        VALUES (#{orderNo}, #{amount}, #{channel}, #{productType}, #{status}, #{createdAt}, #{updatedAt})
+        INSERT INTO payment_order (order_no, merchant_id, amount, channel, product_type, status, created_at, updated_at)
+        VALUES (#{orderNo}, #{merchantId}, #{amount}, #{channel}, #{productType}, #{status}, #{createdAt}, #{updatedAt})
         ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = VALUES(updated_at)
     </insert>
 
     <select id="findByOrderNo" resultType="com.mdyaipay.payment.mybatis.row.PaymentOrderRow">
-        SELECT order_no, amount, channel, product_type, status, created_at, updated_at
+        SELECT order_no, merchant_id, amount, channel, product_type, status, created_at, updated_at
         FROM payment_order
         WHERE order_no = #{orderNo}
     </select>

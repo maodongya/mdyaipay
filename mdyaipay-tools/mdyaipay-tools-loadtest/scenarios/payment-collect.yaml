@@ -1,3 +1,5 @@
+# 对外模式：收单须走网关加密报文（本场景与 gateway-collect 相同，便于从 payment 目录习惯命名运行）。
+# 依赖：gateway(8041) + user/payment Dubbo(ZK) + payment actuator(8081 可选)，以及 LOADTEST_MERCHANT_* 环境变量。
 name: payment-collect
 protocol: http
 load:
@@ -12,11 +14,16 @@ metrics:
   recordErrors: true
   maxErrorSamples: 50
 target:
-  url: http://127.0.0.1:8081/api/v1/payments/collect
+  url: http://127.0.0.1:8041/api/v1/payments/collect
   method: POST
   headers:
     Content-Type: application/json
-  body: '{"orderNo":"LT-P-${threadIndex}-${iteration}","amount":100,"channel":"MOCK_QUICK"}'
+  bodyMode: merchantEncryptedCollect
+  merchantEncryptedCollect:
+    amount: 100
+    channel: MOCK
+    productType: QUICK_COLLECTION
+    orderNoPrefix: LT-PAY-
   timeoutMillis: 10000
   expectStatus: [200]
 report:

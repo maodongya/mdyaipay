@@ -12,7 +12,9 @@
 
     <modules>
         <module>mdyaipay-tools</module>
+        <module>mdyaipay-user-api</module>
         <module>mdyaipay-user</module>
+        <module>mdyaipay-payment-api</module>
         <module>mdyaipay-accounting</module>
         <module>mdyaipay-finance</module>
         <module>mdyaipay-payment</module>
@@ -29,6 +31,8 @@
         <junit.version>5.10.2</junit.version>
         <jackson.version>2.17.2</jackson.version>
         <aspectj.version>1.9.22.1</aspectj.version>
+        <dubbo.version>3.3.2</dubbo.version>
+        <rocketmq-spring.version>2.3.1</rocketmq-spring.version>
     </properties>
 
     <dependencyManagement>
@@ -117,6 +121,31 @@
                 <groupId>com.mdyaipay</groupId>
                 <artifactId>mdyaipay-payment</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-user-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-payment-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-spring-boot-starter</artifactId>
+                <version>${dubbo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-registry-zookeeper</artifactId>
+                <version>${dubbo.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>${rocketmq-spring.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

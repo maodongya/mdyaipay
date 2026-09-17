@@ -13,7 +13,7 @@ public final class TimeTraceEntrySupport {
 
     public static Object aroundEntry(ProceedingJoinPoint joinPoint, TimeTraceListener listener) throws Throwable {
         if (TimeTraceContext.isTracing()) {
-            return joinPoint.proceed();
+            return TimeTraceNestedSupport.aroundNested(joinPoint);
         }
 
         TimeTrace annotation = resolveAnnotation(joinPoint);

@@ -11,6 +11,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 
+/**
+ * MyBatis {@code Instant} ↔ JDBC 类型处理器。
+ */
 @MappedTypes(Instant.class)
 public class InstantTypeHandler extends BaseTypeHandler<Instant> {
 

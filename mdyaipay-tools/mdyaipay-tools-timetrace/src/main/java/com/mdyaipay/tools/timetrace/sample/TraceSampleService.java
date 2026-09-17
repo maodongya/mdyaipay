@@ -9,6 +9,12 @@ import com.mdyaipay.tools.timetrace.TimeTrace;
  */
 public class TraceSampleService {
 
+    private final TraceCollaboratorService collaborator;
+
+    public TraceSampleService(TraceCollaboratorService collaborator) {
+        this.collaborator = collaborator;
+    }
+
     /**
      * 入口方法：串联两段子调用并返回合并结果，总耗时约数毫秒（空转模拟）。
      */
@@ -17,8 +23,11 @@ public class TraceSampleService {
         /* 功能块：阶段 A — 模拟第一段业务耗时 */
         int a = stepA(seed);
 
+        /* 功能块：跨 Bean 调用 — 应出现在 TimeTrace 报告树 */
+        int fromCollaborator = collaborator.bump(a);
+
         /* 功能块：阶段 B — 依赖 A 的结果继续处理 */
-        int b = stepB(a);
+        int b = stepB(fromCollaborator);
 
         /* 功能块：合并结果 — 供断言与报告校验 */
         return a + b;

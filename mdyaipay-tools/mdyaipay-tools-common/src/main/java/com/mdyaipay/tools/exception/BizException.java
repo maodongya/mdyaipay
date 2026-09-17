@@ -1,5 +1,8 @@
 package com.mdyaipay.tools.exception;
 
+/**
+ * 携带整数 {@code code} 的业务异常，与 {@link ErrorCode} 对齐。
+ */
 public class BizException extends RuntimeException {
 
     private final int code;

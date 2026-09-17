@@ -121,7 +121,17 @@ report:
 
 HTTP `target` 的 `url`、`body`、Header 值支持占位符：`${iteration}`（全局采样序号）、`${threadIndex}`（虚拟用户索引），便于收单/代扣/代付等幂等键压测。
 
-本地 `mdyaipay-gateway`（JDK `MdyaipayGatewayServer`，默认 **8041**）示例场景见 `scenarios/gateway-*.yaml`：`health`、`collect`、`ids/next`、`withhold`、`payout`。
+**对外收单压测（加密报文）**：`target.bodyMode: merchantEncryptedCollect`，并配置 `target.merchantEncryptedCollect`（`amount`、`channel`、`productType`、`orderNoPrefix` 等）。凭证通过环境变量注入（勿写入 YAML）：
+
+| 环境变量 | 说明 |
+|----------|------|
+| `LOADTEST_MERCHANT_APP_KEY` | 商户 `appKey` |
+| `LOADTEST_MERCHANT_APP_SECRET` | 商户 `appSecret`（一次性签发） |
+| `LOADTEST_MERCHANT_ID` | 商户 ID，与解密 payload 内 `merchant_id` 一致 |
+
+规则与网关 `MerchantSignedCollectProcessor`、工具库 `MerchantOpenApiPayloadCipher` / `MerchantOpenApiSignatures` 一致。场景：`gateway-collect.yaml`、`payment-collect.yaml`（均打 **8041** 网关）。
+
+本地 `mdyaipay-gateway`（JDK `MdyaipayGatewayServer` 或 Spring Cloud Gateway，默认 **8041**）示例场景见 `scenarios/gateway-*.yaml`：`health`、`collect`（加密收单）、`ids/next`、`withhold`、`payout`。
 
 ### Dubbo `target` 字段（规划）
 

@@ -4,8 +4,8 @@
 
 ```text
 com.mdyaipay.payment
-├── MdyaipayPaymentApplication         # Spring Boot 入口（默认 8081）
-├── controller                         # REST + dto
+├── MdyaipayPaymentApplication         # Spring Boot 入口（8081 仅 actuator；Dubbo 20881）
+├── api.dubbo                          # PaymentGatewayFacadeImpl（网关内网 RPC）
 ├── service                            # 应用服务（collect | withhold | payout）
 ├── domain                             # 聚合、仓储接口、渠道端口
 ├── repository                         # MyBatis 仓储实现、建表初始化
@@ -71,16 +71,20 @@ com.mdyaipay.payment
 
 ### 2.8 HTTP 网关（mdyaipay-gateway）
 
-进程入口：`com.mdyaipay.gateway.MdyaipayGatewayServer`，默认端口 `8090`（环境变量 `MDYAIPAY_GATEWAY_PORT`）。
+两种部署方式：
+
+1. **Spring Cloud Gateway（推荐）**：`MdyaipayGatewayApplication`，默认 `8041`；经 **Dubbo + Zookeeper**（`DUBBO_REGISTRY_ADDRESS`，默认 `zookeeper://127.0.0.1:2181`）调用 `mdyaipay-user`（凭证解析）、`mdyaipay-payment`（收单/代扣/代付）；加密收单见 `MerchantSignedCollectGatewayFilter`。
+2. **JDK 轻量网关**：`MdyaipayGatewayServer` 仍为 HTTP 转发（本地无 Spring/Dubbo 时使用）；生产对外入口请用 Spring Cloud Gateway。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/health` | 存活探测 |
-| POST | `/api/v1/payments/collect` | JSON：`orderNo`,`amount`,`channel`[,`productType`] |
+| POST | `/api/v1/payments/collect` | **商户经网关**：加密外层 + HMAC（见 [`user-merchant-design.md`](user-merchant-design.md)）；**网关→payment** 明文 JSON：`merchantId`,`amount`,`channel`[,`orderNo`,`productType`] |
 | GET | `/api/v1/payments/{orderNo}` | 查询收单 |
 | POST | `/api/v1/payments/{orderNo}/channel-confirm` | JSON：`success`（网银异步确认） |
 | POST | `/api/v1/withholds` | JSON：`deductionNo`,`agreementNo`,`amount`,`channel` |
 | POST | `/api/v1/payouts` | JSON：`payoutNo`,`amount`,`channel`,`payeeRef` |
+| * | `/api/v1/merchants/**` | 反向代理至 user 服务（见 [`user-merchant-design.md`](user-merchant-design.md) HTTP 表） |
 
 ## 3. 应用服务设计
 
@@ -122,7 +126,7 @@ com.mdyaipay.payment
 | `spring.datasource.*` / `PAYMENT_JDBC_*` | 数据源 |
 | `payment.jdbc.init-schema` / `PAYMENT_JDBC_INIT_SCHEMA` | `true` 时启动执行 `classpath:db/schema-mysql.sql` |
 
-建表脚本：`mdyaipay-payment/src/main/resources/db/schema-mysql.sql`（表 `payment_order`、`withhold_order`、`payout_order`）。
+建表脚本：`mdyaipay-payment/src/main/resources/db/schema-mysql.sql`（表 `payment_order`、`withhold_order`、`payout_order`）。业务单号列为主键（点查幂等/详情）；二级索引见同文件及 `db/indexes-mysql.sql`（按 `status+created_at`、代扣 `agreement_no` 等，启动 init-schema 时对已有库幂等补建）。
 
 MyBatis：`src/main/resources/mapper/*.xml`；`PaymentMyBatisConfiguration`（`@MapperScan`）。单测使用 H2（`src/test/resources/application.properties`）。非 Spring 工厂路径通过 `PaymentMyBatisSupport` 构建 `SqlSessionFactory`。
 

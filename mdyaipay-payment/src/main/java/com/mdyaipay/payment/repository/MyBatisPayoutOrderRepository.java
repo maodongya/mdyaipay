@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * {@link PayoutOrderRepository} 的 MyBatis 实现。
+ */
 @Repository
 public class MyBatisPayoutOrderRepository implements PayoutOrderRepository {
 

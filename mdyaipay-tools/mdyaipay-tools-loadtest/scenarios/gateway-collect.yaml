@@ -1,3 +1,6 @@
+# 对外模式：经网关加密收单。运行前请设置：
+#   LOADTEST_MERCHANT_APP_KEY / LOADTEST_MERCHANT_APP_SECRET / LOADTEST_MERCHANT_ID
+# （由 user 模块 issueApiCredential 签发，商户须 ENABLED）
 name: gateway-collect
 protocol: http
 load:
@@ -16,7 +19,12 @@ target:
   method: POST
   headers:
     Content-Type: application/json
-  body: '{"orderNo":"LT-C-${iteration}","amount":100,"channel":"MOCK_QUICK"}'
+  bodyMode: merchantEncryptedCollect
+  merchantEncryptedCollect:
+    amount: 100
+    channel: MOCK
+    productType: QUICK_COLLECTION
+    orderNoPrefix: LT-GW-
   timeoutMillis: 10000
   expectStatus: [200]
 report:

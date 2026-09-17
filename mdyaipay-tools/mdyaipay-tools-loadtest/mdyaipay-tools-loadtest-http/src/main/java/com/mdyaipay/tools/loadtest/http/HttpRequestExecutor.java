@@ -28,7 +28,7 @@ public final class HttpRequestExecutor {
         }
 
         String method = HttpTargetSupport.method(target);
-        String body = templatize(HttpTargetSupport.body(target), runContext);
+        String body = resolveBody(target, runContext);
         HttpRequest.BodyPublisher publisher = body == null
                 ? HttpRequest.BodyPublishers.noBody()
                 : HttpRequest.BodyPublishers.ofString(body);
@@ -41,6 +41,14 @@ public final class HttpRequestExecutor {
         boolean ok = expect.contains(status);
         String err = ok ? null : "unexpected status " + status;
         return new SampleOutcome(ok, latency, status, err);
+    }
+
+    private static String resolveBody(Map<String, Object> target, LoadTestRunContext runContext) throws Exception {
+        if ("merchantEncryptedCollect".equals(HttpTargetSupport.bodyMode(target))) {
+            return MerchantEncryptedCollectBodyBuilder.build(
+                    HttpTargetSupport.merchantEncryptedCollect(target), runContext);
+        }
+        return templatize(HttpTargetSupport.body(target), runContext);
     }
 
     /** 场景 url/body/header 中可用 {@code ${iteration}}、{@code ${threadIndex}}。 */

@@ -4,6 +4,7 @@ import com.mdyaipay.payment.domain.withhold.WithholdGateway;
 import com.mdyaipay.payment.domain.withhold.WithholdOrder;
 import com.mdyaipay.payment.domain.withhold.WithholdStatus;
 import com.mdyaipay.payment.testsupport.MapWithholdOrderRepository;
+import com.mdyaipay.payment.testsupport.PaymentTestSupport;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,8 @@ class WithholdApplicationServiceTest {
         WithholdGateway gateway = order -> true;
         WithholdApplicationService service = new WithholdApplicationService(
                 new MapWithholdOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         WithholdOrder order = service.createAndDeduct("WH-1", "AGR-1", 100L, "MOCK");
@@ -26,7 +28,8 @@ class WithholdApplicationServiceTest {
         WithholdGateway gateway = order -> true;
         WithholdApplicationService service = new WithholdApplicationService(
                 new MapWithholdOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         WithholdOrder first = service.createAndDeduct("WH-2", "AGR-1", 100L, "MOCK");

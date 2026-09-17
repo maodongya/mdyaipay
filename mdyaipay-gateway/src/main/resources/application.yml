@@ -18,25 +18,6 @@ spring:
             allowedMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
             allowedHeaders: "*"
             allowCredentials: false
-      routes:
-        - id: payment-service
-          uri: ${PAYMENT_SERVICE_URI:http://localhost:8081}
-          predicates:
-            - Path=/api/v1/payments/**
-          filters:
-            - StripPrefix=0
-        - id: withhold-service
-          uri: ${WITHHOLD_SERVICE_URI:http://localhost:8081}
-          predicates:
-            - Path=/api/v1/withholds/**
-          filters:
-            - StripPrefix=0
-        - id: payout-service
-          uri: ${PAYOUT_SERVICE_URI:http://localhost:8081}
-          predicates:
-            - Path=/api/v1/payouts/**
-          filters:
-            - StripPrefix=0
 
 management:
   endpoints:
@@ -51,3 +32,13 @@ management:
 logging:
   level:
     org.springframework.cloud.gateway: INFO
+
+dubbo:
+  application:
+    name: mdyaipay-gateway
+    qos-enable: false
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
+  consumer:
+    check: false
+    timeout: 30000

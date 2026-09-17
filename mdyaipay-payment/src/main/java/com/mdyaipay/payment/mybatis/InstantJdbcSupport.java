@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 
+/**
+ * {@code Instant} 与 JDBC {@code Timestamp} 互转工具。
+ */
 public final class InstantJdbcSupport {
 
     private InstantJdbcSupport() {

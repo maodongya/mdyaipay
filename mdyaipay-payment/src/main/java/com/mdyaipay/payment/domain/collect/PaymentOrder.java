@@ -3,8 +3,12 @@ package com.mdyaipay.payment.domain.collect;
 import java.time.Instant;
 import java.util.Objects;
 
+/**
+ * 收单聚合根：状态迁移与金额校验；不负责渠道报文解析。
+ */
 public class PaymentOrder {
     private final String orderNo;
+    private final Long merchantId;
     private final long amount;
     private final String channel;
     private final PaymentProductType productType;
@@ -13,7 +17,11 @@ public class PaymentOrder {
     private Instant updatedAt;
 
     public PaymentOrder(String orderNo, long amount, String channel, PaymentProductType productType) {
-        this(orderNo, amount, channel, productType, PaymentStatus.CREATED, Instant.now(), Instant.now());
+        this(orderNo, amount, channel, productType, null);
+    }
+
+    public PaymentOrder(String orderNo, long amount, String channel, PaymentProductType productType, Long merchantId) {
+        this(orderNo, amount, channel, productType, merchantId, PaymentStatus.CREATED, Instant.now(), Instant.now());
     }
 
     private PaymentOrder(
@@ -21,6 +29,7 @@ public class PaymentOrder {
             long amount,
             String channel,
             PaymentProductType productType,
+            Long merchantId,
             PaymentStatus status,
             Instant createdAt,
             Instant updatedAt) {
@@ -33,7 +42,11 @@ public class PaymentOrder {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than 0");
         }
+        if (merchantId != null && merchantId <= 0) {
+            throw new IllegalArgumentException("merchantId must be positive when present");
+        }
         this.amount = amount;
+        this.merchantId = merchantId;
     }
 
     /** 从持久化层重建聚合，不触发新建业务校验以外的状态迁移。 */
@@ -45,7 +58,23 @@ public class PaymentOrder {
             PaymentStatus status,
             Instant createdAt,
             Instant updatedAt) {
-        return new PaymentOrder(orderNo, amount, channel, productType, status, createdAt, updatedAt);
+        return rehydrate(orderNo, amount, channel, productType, null, status, createdAt, updatedAt);
+    }
+
+    public static PaymentOrder rehydrate(
+            String orderNo,
+            long amount,
+            String channel,
+            PaymentProductType productType,
+            Long merchantId,
+            PaymentStatus status,
+            Instant createdAt,
+            Instant updatedAt) {
+        return new PaymentOrder(orderNo, amount, channel, productType, merchantId, status, createdAt, updatedAt);
+    }
+
+    public Long getMerchantId() {
+        return merchantId;
     }
 
     public String getOrderNo() {

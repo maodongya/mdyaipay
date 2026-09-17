@@ -2,6 +2,8 @@
 
 `mdyaipay` 采用 Maven 多模块聚合工程，父工程 `artifactId` 为 `mdyaipay`（`packaging=pom`），子模块职责边界如下。
 
+编码与中文注释为 **强制规约**，见 [`方便人理解代码规约.md`](方便人理解代码规约.md) 与 [`.cursor/rules/java-chinese-readable-docs.mdc`](../.cursor/rules/java-chinese-readable-docs.mdc)。
+
 | 模块 | ArtifactId | 职责 |
 |------|--------------|------|
 | 公共（聚合） | `mdyaipay-tools` | Maven 聚合：common、timetrace、loadtest 等 |
@@ -13,7 +15,9 @@
 | 公共 | `mdyaipay-tools-loadtest-dubbo` | Dubbo 泛化调用压测驱动 |
 | 公共 | `mdyaipay-tools-loadtest-springcloud` | Spring Cloud（LB/Feign）压测驱动 |
 | 公共 | `mdyaipay-tools-loadtest-cli` | 场景文件驱动的命令行压测入口 |
-| 用户 | `mdyaipay-user` | 会员/商户主体、认证会话、权限模型 |
+| 用户 API | `mdyaipay-user-api` | Dubbo Facade 与 DTO（无实现依赖） |
+| 支付 API | `mdyaipay-payment-api` | 网关内网 Dubbo Facade（收单/代扣/代付） |
+| 用户 | `mdyaipay-user` | 会员/商户主体、认证会话、权限模型；商户开放 API 验签 |
 | 账务 | `mdyaipay-accounting` | 账户分录、余额、冻结与入账一致性 |
 | 财务 | `mdyaipay-finance` | 结算、对账、差异处理与报表口径 |
 | 支付 | `mdyaipay-payment` | 收单（快捷/网银）、代扣、代付等领域模型、应用编排与渠道网关抽象 |

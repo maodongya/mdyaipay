@@ -5,20 +5,43 @@ spring:
   application:
     name: mdyaipay-payment
   datasource:
-    url: ${PAYMENT_JDBC_URL:jdbc:mysql://127.0.0.1:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    url: ${PAYMENT_JDBC_URL:jdbc:mysql://127.0.0.1:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
     username: ${PAYMENT_JDBC_USER:root}
-    password: ${PAYMENT_JDBC_PASSWORD:}
+    password: ${PAYMENT_JDBC_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+mdyaipay:
+  timetrace:
+    enabled: true
+    report-sink: log4j
+    log-file: logs/timetrace.log
+
+logging:
+  file:
+    name: logs/mdyaipay-payment.log
+
 payment:
+  id:
+    worker-id: ${PAYMENT_ID_WORKER_ID:2}
+    datacenter-id: ${PAYMENT_ID_DATACENTER_ID:1}
   jdbc:
-    init-schema: false
+    init-schema: ${PAYMENT_JDBC_INIT_SCHEMA:true}
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-handlers-package: com.mdyaipay.payment.mybatis
   configuration:
     map-underscore-to-camel-case: true
+
+dubbo:
+  application:
+    name: mdyaipay-payment
+    qos-enable: false
+  protocol:
+    name: dubbo
+    port: ${DUBBO_PORT:20881}
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
 
 management:
   endpoints:

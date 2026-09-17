@@ -1,0 +1,63 @@
+server:
+  port: ${USER_SERVER_PORT:8082}
+
+spring:
+  application:
+    name: mdyaipay-user
+  datasource:
+    url: ${USER_JDBC_URL:jdbc:mysql://127.0.0.1:3306/mdyaipay_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
+    username: ${USER_JDBC_USER:root}
+    password: ${USER_JDBC_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+user:
+  id:
+    worker-id: ${USER_ID_WORKER_ID:3}
+    datacenter-id: ${USER_ID_DATACENTER_ID:1}
+  jdbc:
+    init-schema: ${USER_JDBC_INIT_SCHEMA:true}
+  merchant:
+    sign:
+      max-skew-seconds: ${USER_MERCHANT_SIGN_MAX_SKEW:300}
+  crypto:
+    aes-key: ${USER_AES_KEY:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+  mq:
+    enabled: ${USER_MQ_ENABLED:false}
+    outbox-relay-enabled: true
+    outbox-relay-interval-ms: 5000
+    merchant-topic: MDYAIPAY_USER_MERCHANT
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-handlers-package: com.mdyaipay.user.dao.support.mybatis
+  configuration:
+    map-underscore-to-camel-case: true
+
+dubbo:
+  application:
+    name: mdyaipay-user
+    qos-enable: false
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20882}
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESRV:127.0.0.1:9876}
+  producer:
+    group: mdyaipay-user-producer
+
+logging:
+  file:
+    name: logs/mdyaipay-user.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

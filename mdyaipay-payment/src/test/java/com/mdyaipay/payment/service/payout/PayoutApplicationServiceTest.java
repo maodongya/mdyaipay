@@ -4,6 +4,7 @@ import com.mdyaipay.payment.domain.payout.PayoutGateway;
 import com.mdyaipay.payment.domain.payout.PayoutOrder;
 import com.mdyaipay.payment.domain.payout.PayoutStatus;
 import com.mdyaipay.payment.testsupport.MapPayoutOrderRepository;
+import com.mdyaipay.payment.testsupport.PaymentTestSupport;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,8 @@ class PayoutApplicationServiceTest {
         PayoutGateway gateway = order -> true;
         PayoutApplicationService service = new PayoutApplicationService(
                 new MapPayoutOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         PayoutOrder order = service.createAndRemit("PO-1", 100L, "MOCK", "payee-1");
@@ -26,7 +28,8 @@ class PayoutApplicationServiceTest {
         PayoutGateway gateway = order -> true;
         PayoutApplicationService service = new PayoutApplicationService(
                 new MapPayoutOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         PayoutOrder first = service.createAndRemit("PO-2", 100L, "MOCK", "payee-1");

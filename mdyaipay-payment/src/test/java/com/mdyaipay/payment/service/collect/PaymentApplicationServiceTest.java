@@ -6,6 +6,7 @@ import com.mdyaipay.payment.domain.collect.PaymentProductType;
 import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
 import com.mdyaipay.payment.testsupport.MapPaymentOrderRepository;
+import com.mdyaipay.payment.testsupport.PaymentTestSupport;
 import com.mdyaipay.payment.gateway.MockPaymentGateway;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,8 @@ class PaymentApplicationServiceTest {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         PaymentOrder order = service.createAndPay("ORDER-1", 100L, "MOCK");
@@ -29,7 +31,8 @@ class PaymentApplicationServiceTest {
     void shouldStayProcessingWhenOnlineBankingAwaitingChannel() {
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                new MockPaymentGateway()
+                new MockPaymentGateway(),
+                PaymentTestSupport.businessNoGenerator()
         );
 
         PaymentOrder order = service.createAndPay("ORDER-BANK-1", 100L, "MOCK", PaymentProductType.ONLINE_BANKING);
@@ -41,7 +44,8 @@ class PaymentApplicationServiceTest {
     void shouldConfirmOnlineBankingChannelSuccess() {
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                new MockPaymentGateway()
+                new MockPaymentGateway(),
+                PaymentTestSupport.businessNoGenerator()
         );
 
         service.createAndPay("ORDER-BANK-2", 100L, "MOCK", PaymentProductType.ONLINE_BANKING);
@@ -54,7 +58,8 @@ class PaymentApplicationServiceTest {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         Assertions.assertThrows(IllegalArgumentException.class, () ->
@@ -66,7 +71,8 @@ class PaymentApplicationServiceTest {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         service.createAndPay("ORDER-QUICK-X", 100L, "MOCK");
@@ -79,7 +85,8 @@ class PaymentApplicationServiceTest {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         Assertions.assertThrows(IllegalArgumentException.class, () ->
@@ -91,7 +98,8 @@ class PaymentApplicationServiceTest {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
         PaymentApplicationService service = new PaymentApplicationService(
                 new MapPaymentOrderRepository(),
-                gateway
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
         );
 
         PaymentOrder first = service.createAndPay("ORDER-3", 100L, "MOCK");
@@ -99,5 +107,18 @@ class PaymentApplicationServiceTest {
 
         Assertions.assertSame(first, second);
         Assertions.assertEquals(100L, second.getAmount());
+    }
+
+    @Test
+    void shouldAssignSnowflakeOrderNoWhenClientOmitsOrderNo() {
+        PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
+        PaymentApplicationService service = new PaymentApplicationService(
+                new MapPaymentOrderRepository(),
+                gateway,
+                PaymentTestSupport.businessNoGenerator()
+        );
+
+        PaymentOrder order = service.createAndPay(null, 100L, "MOCK");
+        Assertions.assertTrue(order.getOrderNo().matches("\\d{16,20}"));
     }
 }

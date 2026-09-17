@@ -3,25 +3,38 @@ package com.mdyaipay.payment.service.payout;
 import com.mdyaipay.payment.domain.payout.PayoutGateway;
 import com.mdyaipay.payment.domain.payout.PayoutOrder;
 import com.mdyaipay.payment.domain.payout.PayoutOrderRepository;
-
+import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
+/**
+ * 代付应用编排：校验、幂等、调 {@link PayoutGateway}、持久化。
+ */
 @Service
 public class PayoutApplicationService {
     private final PayoutOrderRepository orderRepository;
     private final PayoutGateway payoutGateway;
+    private final PaymentBusinessNoGenerator businessNoGenerator;
 
-    public PayoutApplicationService(PayoutOrderRepository orderRepository, PayoutGateway payoutGateway) {
+    public PayoutApplicationService(
+            PayoutOrderRepository orderRepository,
+            PayoutGateway payoutGateway,
+            PaymentBusinessNoGenerator businessNoGenerator) {
         this.orderRepository = Objects.requireNonNull(orderRepository, "orderRepository must not be null");
         this.payoutGateway = Objects.requireNonNull(payoutGateway, "payoutGateway must not be null");
+        this.businessNoGenerator = Objects.requireNonNull(businessNoGenerator, "businessNoGenerator must not be null");
     }
 
+    /**
+     * 发起代付。幂等：{@code payoutNo} 已存在则直接返回；blank 时服务端生成单号。
+     */
     public PayoutOrder createAndRemit(String payoutNo, long amount, String channel, String payeeRef) {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than 0");
         }
+
+        payoutNo = businessNoGenerator.resolvePayoutNo(payoutNo);
 
         PayoutOrder existed = orderRepository.findByPayoutNo(payoutNo).orElse(null);
         if (existed != null) {

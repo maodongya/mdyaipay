@@ -28,6 +28,22 @@
             <artifactId>mdyaipay-tools-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-user-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-payment-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-registry-zookeeper</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>

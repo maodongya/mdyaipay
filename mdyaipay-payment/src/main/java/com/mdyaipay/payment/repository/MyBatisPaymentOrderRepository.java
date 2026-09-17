@@ -11,6 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * {@link PaymentOrderRepository} 的 MyBatis 实现。
+ */
 @Repository
 public class MyBatisPaymentOrderRepository implements PaymentOrderRepository {
 
@@ -35,6 +38,7 @@ public class MyBatisPaymentOrderRepository implements PaymentOrderRepository {
     private static PaymentOrderRow toRow(PaymentOrder order) {
         return new PaymentOrderRow(
                 order.getOrderNo(),
+                order.getMerchantId(),
                 order.getAmount(),
                 order.getChannel(),
                 order.getProductType().name(),
@@ -49,6 +53,7 @@ public class MyBatisPaymentOrderRepository implements PaymentOrderRepository {
                 row.amount(),
                 row.channel(),
                 PaymentProductType.valueOf(row.productType()),
+                row.merchantId(),
                 PaymentStatus.valueOf(row.status()),
                 row.createdAt(),
                 row.updatedAt());

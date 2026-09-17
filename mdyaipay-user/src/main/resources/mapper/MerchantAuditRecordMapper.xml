@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mdyaipay.user.dao.merchant.mybatis.mapper.MerchantAuditRecordMapper">
+
+    <insert id="insert">
+        INSERT INTO merchant_audit_record (record_id, merchant_id, auditor, result, remark, created_at)
+        VALUES (#{recordId}, #{merchantId}, #{auditor}, #{result}, #{remark}, #{createdAt})
+    </insert>
+</mapper>

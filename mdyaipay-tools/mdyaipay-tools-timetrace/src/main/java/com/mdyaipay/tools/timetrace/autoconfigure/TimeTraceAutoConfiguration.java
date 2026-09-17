@@ -23,4 +23,9 @@ public class TimeTraceAutoConfiguration {
     TimeTraceAspect timeTraceAspect() {
         return new TimeTraceAspect();
     }
+
+    @Bean
+    TimeTraceListenerConfigurer timeTraceListenerConfigurer(TimeTraceProperties properties) {
+        return new TimeTraceListenerConfigurer(properties);
+    }
 }

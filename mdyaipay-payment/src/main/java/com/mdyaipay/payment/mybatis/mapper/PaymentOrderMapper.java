@@ -4,6 +4,9 @@ import com.mdyaipay.payment.mybatis.row.PaymentOrderRow;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+/**
+ * 表 {@code payment_order} 的 MyBatis Mapper。
+ */
 @Mapper
 public interface PaymentOrderMapper {
 

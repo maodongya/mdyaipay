@@ -5,6 +5,9 @@ import com.mdyaipay.payment.domain.collect.PaymentOrder;
 import com.mdyaipay.payment.domain.collect.PaymentProductType;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
 
+/**
+ * 收单 Mock 渠道：本地/单测用，同步返回成功或失败。
+ */
 public class MockPaymentGateway implements PaymentGateway {
     @Override
     public PaymentSubmitResult pay(PaymentOrder order) {

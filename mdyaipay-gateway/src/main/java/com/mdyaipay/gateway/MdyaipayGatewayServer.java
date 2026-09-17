@@ -16,7 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 对外 HTTP 网关（JDK HttpServer）：ID 本地生成，支付/代扣/代付转发至 payment 服务。
+ * 对外 HTTP 网关（JDK HttpServer）：ID 本地生成；商户转发 user；支付请用 Spring {@code MdyaipayGatewayApplication}（Dubbo）。
  */
 public class MdyaipayGatewayServer {
 
@@ -24,10 +24,11 @@ public class MdyaipayGatewayServer {
     private static final int MAX_ID_BATCH = 1000;
     private static final Pattern PAYMENT_GET = Pattern.compile("^/api/v1/payments/([^/]+)$");
     private static final Pattern PAYMENT_CONFIRM = Pattern.compile("^/api/v1/payments/([^/]+)/channel-confirm$");
+    private static final Pattern MERCHANT_API = Pattern.compile("^/api/v1/merchants(/.*)?$");
 
     private final ObjectMapper json = new ObjectMapper();
     private final HttpServer server;
-    private final PaymentBackendClient paymentBackend;
+    private final UserBackendClient userBackend;
     private final SnowflakeIdGenerator idGenerator;
 
     public MdyaipayGatewayServer(int port) throws IOException {
@@ -35,8 +36,9 @@ public class MdyaipayGatewayServer {
     }
 
     public MdyaipayGatewayServer(int port, long workerId, long datacenterId) throws IOException {
-        String paymentBase = System.getenv("PAYMENT_BASE_URL");
-        this.paymentBackend = new PaymentBackendClient(paymentBase != null ? paymentBase : "http://127.0.0.1:8081");
+        String userBase = System.getenv("USER_BASE_URL");
+        String resolvedUserBase = userBase != null ? userBase : "http://127.0.0.1:8082";
+        this.userBackend = new UserBackendClient(resolvedUserBase);
         this.idGenerator = new SnowflakeIdGenerator(workerId, datacenterId);
 
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
@@ -63,7 +65,7 @@ public class MdyaipayGatewayServer {
             }
 
             if ("/api/v1/payments/collect".equals(path) && "POST".equalsIgnoreCase(method)) {
-                proxyPayment(exchange, method, path);
+                handleSignedCollect(exchange);
                 return;
             }
 
@@ -89,6 +91,11 @@ public class MdyaipayGatewayServer {
                 return;
             }
 
+            if (MERCHANT_API.matcher(path).matches()) {
+                proxyUser(exchange, method, path);
+                return;
+            }
+
             if ("/api/v1/ids/next".equals(path) && "GET".equalsIgnoreCase(method)) {
                 handleNextId(exchange);
                 return;
@@ -103,22 +110,34 @@ public class MdyaipayGatewayServer {
         } catch (IllegalArgumentException ex) {
             writeJsonError(exchange, 400, ex.getMessage());
         } catch (IOException ex) {
-            writeJsonError(exchange, 502, "payment backend unavailable: " + ex.getMessage());
+            writeJsonError(exchange, 502, "backend unavailable: " + ex.getMessage());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            writeJsonError(exchange, 502, "payment backend interrupted");
+            writeJsonError(exchange, 502, "backend interrupted");
         }
     }
 
-    private void proxyPayment(HttpExchange exchange, String method, String path)
+    private void handleSignedCollect(HttpExchange exchange) throws IOException {
+        writeJsonError(exchange, 501,
+                "payment HTTP removed; use MdyaipayGatewayApplication (Dubbo + ZK) for encrypted collect");
+    }
+
+    private void proxyUser(HttpExchange exchange, String method, String path)
             throws IOException, InterruptedException {
+        String query = exchange.getRequestURI().getRawQuery();
+        String forwardPath = query == null || query.isBlank() ? path : path + "?" + query;
         String body = "GET".equalsIgnoreCase(method) ? null : readRequestBody(exchange);
-        PaymentBackendClient.BackendResponse backend = paymentBackend.forward(method, path, body);
+        PaymentBackendClient.BackendResponse backend = userBackend.forward(method, forwardPath, body);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         exchange.sendResponseHeaders(backend.statusCode(), backend.body().length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(backend.body());
         }
+    }
+
+    private void proxyPayment(HttpExchange exchange, String method, String path) throws IOException {
+        writeJsonError(exchange, 501,
+                "payment HTTP API removed; run MdyaipayGatewayApplication (Dubbo via ZK)");
     }
 
     private void handleNextId(HttpExchange exchange) throws IOException {
@@ -203,15 +222,12 @@ public class MdyaipayGatewayServer {
         MdyaipayGatewayServer app = new MdyaipayGatewayServer(port, workerId, datacenterId);
         app.start();
         System.out.println("mdyaipay gateway listening on http://localhost:" + port);
-        System.out.println("PAYMENT_BASE_URL -> payment service (default http://127.0.0.1:8081)");
+        System.out.println("USER_BASE_URL -> user service (default http://127.0.0.1:8082)");
         System.out.println("GET  /health");
         System.out.println("GET  /api/v1/ids/next");
         System.out.println("POST /api/v1/ids/batch  body: {\"count\":10}");
-        System.out.println("POST /api/v1/payments/collect  (proxied)");
-        System.out.println("GET  /api/v1/payments/{orderNo}  (proxied)");
-        System.out.println("POST /api/v1/payments/{orderNo}/channel-confirm  (proxied)");
-        System.out.println("POST /api/v1/withholds  (proxied)");
-        System.out.println("POST /api/v1/payouts  (proxied)");
+        System.out.println("payment APIs -> 501 (use MdyaipayGatewayApplication + Dubbo)");
+        System.out.println("/api/v1/merchants/**  (proxied to user)");
     }
 
     private static long parseLong(String raw, long defaultValue) {

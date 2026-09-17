@@ -12,11 +12,11 @@ metrics:
   recordErrors: true
   maxErrorSamples: 50
 target:
-  url: http://127.0.0.1:8081/api/v1/payouts
+  url: http://127.0.0.1:8041/api/v1/payouts
   method: POST
   headers:
     Content-Type: application/json
-  body: '{"payoutNo":"LT-PO-${threadIndex}-${iteration}","amount":100,"channel":"MOCK_PO","payeeRef":"payee-1"}'
+  body: '{"payoutNo":"LT-PO-${iteration}","amount":100,"channel":"MOCK_PO","payeeRef":"payee-1"}'
   timeoutMillis: 10000
   expectStatus: [200]
 report:

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mdyaipay.user.dao.merchant.mybatis.mapper.MerchantMemberMapper">
+
+    <insert id="upsert">
+        INSERT INTO merchant_member (member_id, merchant_id, user_id, role, created_at)
+        VALUES (#{memberId}, #{merchantId}, #{userId}, #{role}, #{createdAt})
+        ON DUPLICATE KEY UPDATE role = VALUES(role)
+    </insert>
+
+    <select id="findByMerchantIdAndUserId" resultType="com.mdyaipay.user.dao.merchant.mybatis.row.MerchantMemberRow">
+        SELECT member_id, merchant_id, user_id, role, created_at
+        FROM merchant_member
+        WHERE merchant_id = #{merchantId} AND user_id = #{userId}
+    </select>
+</mapper>

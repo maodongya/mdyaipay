@@ -51,6 +51,23 @@ final class HttpTargetSupport {
         return v == null ? null : String.valueOf(v);
     }
 
+    /** 可选：{@code merchantEncryptedCollect} 表示按商户开放 API 构造加密收单 body。 */
+    static String bodyMode(Map<String, Object> target) {
+        Object v = target.get("bodyMode");
+        return v == null ? null : String.valueOf(v);
+    }
+
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> merchantEncryptedCollect(Map<String, Object> target) {
+        Object v = target.get("merchantEncryptedCollect");
+        if (v instanceof Map<?, ?> raw) {
+            Map<String, Object> out = new LinkedHashMap<>();
+            raw.forEach((k, val) -> out.put(String.valueOf(k), val));
+            return out;
+        }
+        return Map.of();
+    }
+
     /** 信任所有服务端证书；默认 {@code false}。 */
     static boolean insecureTls(Map<String, Object> target) {
         Object v = target.get("insecure");

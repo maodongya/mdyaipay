@@ -1,4 +1,5 @@
 /**
- * 用户模块：会员/商户主体、登录与会话、角色权限等与支付主体相关的用户侧能力。
+ * 用户域实现：当前已落地商户子域（service / domain / dao）、Dubbo {@code MerchantFacade}、Outbox→RocketMQ。
+ * 登录会话与用户档案按总 spec 后续迭代。
  */
 package com.mdyaipay.user;

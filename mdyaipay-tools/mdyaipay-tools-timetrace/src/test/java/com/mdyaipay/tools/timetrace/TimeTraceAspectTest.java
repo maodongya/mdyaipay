@@ -1,5 +1,6 @@
 package com.mdyaipay.tools.timetrace;
 
+import com.mdyaipay.tools.timetrace.sample.TraceCollaboratorService;
 import com.mdyaipay.tools.timetrace.sample.TraceSampleService;
 import com.mdyaipay.tools.timetrace.sample.TraceThresholdSampleService;
 import org.junit.jupiter.api.AfterEach;
@@ -30,8 +31,13 @@ class TimeTraceAspectTest {
     static class TestConfig {
 
         @Bean
-        TraceSampleService traceSampleService() {
-            return new TraceSampleService();
+        TraceCollaboratorService traceCollaboratorService() {
+            return new TraceCollaboratorService();
+        }
+
+        @Bean
+        TraceSampleService traceSampleService(TraceCollaboratorService traceCollaboratorService) {
+            return new TraceSampleService(traceCollaboratorService);
         }
 
         @Bean
@@ -61,7 +67,7 @@ class TimeTraceAspectTest {
 
     @Test
     void tracesEntryMethod() {
-        assertEquals(9, sampleService.run(2));
+        assertEquals(29, sampleService.run(2));
 
         assertEquals(1, reports.size());
         TimeTraceReport report = reports.get(0);
@@ -71,6 +77,9 @@ class TimeTraceAspectTest {
 
         TimeTraceNode root = report.getRoot();
         assertTrue(root.getSignature().contains("run"));
+        assertTrue(
+                root.getChildren().stream().anyMatch(n -> n.getSignature().contains("TraceCollaboratorService.bump")),
+                "跨 Bean 调用应出现在报告树");
     }
 
     @Test

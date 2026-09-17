@@ -12,11 +12,11 @@ metrics:
   recordErrors: true
   maxErrorSamples: 50
 target:
-  url: http://127.0.0.1:8081/api/v1/withholds
+  url: http://127.0.0.1:8041/api/v1/withholds
   method: POST
   headers:
     Content-Type: application/json
-  body: '{"deductionNo":"LT-W-${threadIndex}-${iteration}","agreementNo":"AGR-1","amount":100,"channel":"MOCK_WH"}'
+  body: '{"deductionNo":"LT-WH-${iteration}","agreementNo":"AGR-1","amount":100,"channel":"MOCK_WH"}'
   timeoutMillis: 10000
   expectStatus: [200]
 report:

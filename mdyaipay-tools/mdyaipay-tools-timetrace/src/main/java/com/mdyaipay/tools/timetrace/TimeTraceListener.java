@@ -3,7 +3,9 @@ package com.mdyaipay.tools.timetrace;
 /**
  * {@link TimeTrace} 入口一次调用结束后的报告 sink。
  * <p>
- * 通过 {@link TimeTraceSupport#setListener(TimeTraceListener)} 替换默认实现（标准输出）。
+ * 通过 {@link TimeTraceSupport#setListener(TimeTraceListener)} 替换实现；Boot 下默认由
+ * {@link com.mdyaipay.tools.timetrace.autoconfigure.TimeTraceListenerConfigurer} 按
+ * {@code mdyaipay.timetrace.report-sink} 注册 {@link #LOG_TO_LOG4J} 或 {@link #LOG_TO_STDOUT}。
  */
 @FunctionalInterface
 public interface TimeTraceListener {
@@ -12,6 +14,11 @@ public interface TimeTraceListener {
      * 默认 Listener：将 {@link TimeTraceReportFormatter} 结果打印到标准输出。
      */
     TimeTraceListener LOG_TO_STDOUT = report -> System.out.println(TimeTraceReportFormatter.format(report));
+
+    /**
+     * 将报告写入 Log4j2 Logger {@link TimeTraceLog4j#REPORT_LOGGER_NAME}（需在 log4j2 配置中绑定文件 Appender）。
+     */
+    TimeTraceListener LOG_TO_LOG4J = TimeTraceLog4j.defaultListener();
 
     /**
      * 入口追踪结束且满足 {@link TimeTrace#reportOnComplete()} 与耗时门槛时调用。
