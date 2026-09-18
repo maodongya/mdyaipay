@@ -1,14 +1,16 @@
 # Java 中文注释审计（2026-09-17）
 
-依据 [`方便人理解代码规约.md`](方便人理解代码规约.md) §4、§12 对 **`src/main/java`** 做自动化扫描 + 人工补全。
+依据 [`方便人理解代码规约.md`](方便人理解代码规约.md) **§5.0**、§5.1、§13 对 **`src/main/java`** 做自动化扫描 + 人工补全。
 
 ## 扫描口径
 
 | 项 | 规则 |
 |----|------|
-| 类级 Javadoc | 每个 public `class` / `interface` / `enum` / `record` 声明前须有 `/** … */`（可在注解之上） |
+| 类级 Javadoc | **每个** `class` / `interface` / `enum` / `record` / `@interface` 声明前须有中文 `/** … */`（可在注解之上） |
+| 方法 Javadoc | **每个** 方法（含 private、测试方法）须有中文 Javadoc 或合规 `{@inheritDoc}` |
 | `package-info.java` | 含至少一个业务/技术 `.java` 的目录应有包说明 |
-| 对外 public 方法 | Facade、ApplicationService、RestController 等须方法 Javadoc 或 `{@inheritDoc}` / 指向 Facade |
+| 文件行数 | 单 `.java` 文件 **≤ 500 行**（含空行与注释）；脚本待扩展 |
+| 方法行数 | 单方法 **≤ 50 行有效代码**（不计注释行，见 §5.0）；脚本待扩展 |
 
 复跑命令（CI 可挂非零退出码）：
 
@@ -42,7 +44,7 @@ python3 scripts/java-comment-audit.py
 
 - `src/test/java` 中的 public 测试辅助类
 - 仅 package-private 的类型
-- 复杂方法体内部 **§3.1 功能块**（需人工读代码，非脚本可完全判定）
+- 复杂方法体内部 **§4.1 功能块**（需人工读代码，非脚本可完全判定）
 
 ## 强制规约
 

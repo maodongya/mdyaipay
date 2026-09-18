@@ -2,13 +2,14 @@
 
 `mdyaipay` 采用 Maven 多模块聚合工程，父工程 `artifactId` 为 `mdyaipay`（`packaging=pom`），子模块职责边界如下。
 
-编码与中文注释为 **强制规约**，见 [`方便人理解代码规约.md`](方便人理解代码规约.md) 与 [`.cursor/rules/java-chinese-readable-docs.mdc`](../.cursor/rules/java-chinese-readable-docs.mdc)。
+编码与中文注释为 **强制规约**，见 [`方便人理解代码规约.md`](方便人理解代码规约.md) 与 [`.cursor/rules/java-chinese-readable-docs.mdc`](../.cursor/rules/java-chinese-readable-docs.mdc)。设计拆分见 [`设计原则规约.md`](设计原则规约.md) 与 [`.cursor/rules/design-principles.mdc`](../.cursor/rules/design-principles.mdc)。
 
 | 模块 | ArtifactId | 职责 |
 |------|--------------|------|
-| 公共（聚合） | `mdyaipay-tools` | Maven 聚合：common、timetrace、loadtest 等 |
+| 公共（聚合） | `mdyaipay-tools` | Maven 聚合：common、timetrace、trace-core、loadtest 等 |
 | 公共 | `mdyaipay-tools-common` | 雪花 ID、金额分/元工具、统一 API 响应与错误码（无业务编排） |
 | 公共 | `mdyaipay-tools-timetrace` | Spring AOP `@TimeTrace`：入口方法耗时与慢调用报告（无业务编排） |
+| 公共 | `mdyaipay-tools-trace-core` | 分布式 Trace 上下文与 W3C/sw8 传播（仅 JDK，无 Spring） |
 | 公共（聚合） | `mdyaipay-tools-loadtest` | 压测工具聚合：core + HTTP/Dubbo/Spring Cloud 驱动 + CLI |
 | 公共 | `mdyaipay-tools-loadtest-core` | 压测引擎、动态指标、报告模型 |
 | 公共 | `mdyaipay-tools-loadtest-http` | HTTP/HTTPS 压测驱动 |

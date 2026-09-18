@@ -1,0 +1,49 @@
+# 本地 SkyWalking：BanyanDB + OAP + UI（轻量，无需 Elasticsearch）
+# 启动：scripts/run-skywalking.sh 或本目录 docker compose up -d
+services:
+  banyandb:
+    image: ${BANYANDB_IMAGE:-apache/skywalking-banyandb:0.8.0}
+    container_name: mdyaipay-skywalking-banyandb
+    command: standalone --stream-root-path /tmp/stream-data --measure-root-path /tmp/measure-data
+    ports:
+      - "17913:17913"
+    expose:
+      - "17912"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -nz 127.0.0.1 17912"]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+  oap:
+    image: ${OAP_IMAGE:-apache/skywalking-oap-server:10.2.0}
+    container_name: mdyaipay-skywalking-oap
+    depends_on:
+      banyandb:
+        condition: service_healthy
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    environment:
+      SW_HEALTH_CHECKER: default
+      SW_TELEMETRY: prometheus
+      JAVA_OPTS: "-Xms512m -Xmx512m"
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/12800"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 120s
+
+  ui:
+    image: ${UI_IMAGE:-apache/skywalking-ui:10.2.0}
+    container_name: mdyaipay-skywalking-ui
+    depends_on:
+      oap:
+        condition: service_healthy
+    ports:
+      - "8090:8080"
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800

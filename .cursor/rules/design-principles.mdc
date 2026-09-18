@@ -1,0 +1,28 @@
+---
+description: 强制遵循 SOLID、KISS、DRY、SOC、YAGNI（见 docs/设计原则规约.md）
+alwaysApply: true
+---
+
+# 设计原则（强制）
+
+完整条文见 [`docs/设计原则规约.md`](../../docs/设计原则规约.md)。本规则为 **MANDATORY**，与可读性规约同次提交内须一并满足。
+
+## 必须遵守
+
+- **SOLID**：单职责（可读性规约 §1）；扩展用 Gateway / SPI / 新实现类，少改应用服务核心；api Facade 小而专；domain 定端口、infrastructure 实现，依赖单向。
+- **KISS**：最小正确解法；控制流直白（可读性规约 §4）；无多变体时不引入模式堆叠；避免超过 3 层间接才触达业务规则。
+- **DRY**：业务规则不复制；≥2 处相同逻辑须抽取（tools-common 或 domain 单入口）；不为 DRY 造上帝 Utils。
+- **SOC**：模块与 application/domain/infrastructure 分层；gateway 只做接入；横切 tools 不依赖业务模块。
+- **YAGNI**：无文档/需求支撑的「将来」不写；无第二实现时不建抽象基类；diff 只做当前一件事。
+
+## 冲突优先级
+
+**SOLID > KISS > DRY > SOC > YAGNI**。先保职责、依赖方向与接口契约，再简化与去重，最后才砍未入文档的需求；不得为少写代码破坏分层或扩展点。
+
+## 提交前自检（设计原则规约 §6 精简）
+
+1. 是否满足 **S/D/L/I/O** 与 **SOC**（分层、模块边界）？
+2. 是否 **DRY**、**KISS**？
+3. 无第二实现的新抽象是否 **YAGNI** 应删？diff 是否只做一件事？
+
+未满足任一条，视为未完成该次改动。

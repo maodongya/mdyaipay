@@ -35,6 +35,9 @@ wait_health() {
   return 1
 }
 
+# shellcheck source=skywalking-agent-env.sh
+source "$ROOT/scripts/skywalking-agent-env.sh"
+
 start_if_needed() {
   local port=$1 name=$2 module=$3 log=$4
   shift 4
@@ -43,7 +46,22 @@ start_if_needed() {
     return 0
   fi
   echo "starting $name ..."
-  (cd "$module" && env "$@" mvn -q spring-boot:run >"$log" 2>&1) &
+  local mvn_args=(-q spring-boot:run)
+  local sw_env=()
+  if [[ "${ENABLE_SKYWALKING:-0}" == "1" ]] && declare -f skywalking_jvm_arguments >/dev/null 2>&1; then
+    if skywalking_require_agent "$ROOT" 2>/dev/null; then
+      local agent_id="mdyaipay-${name}::${SW_AGENT_ENV:-local}"
+      local jvm
+      jvm="$(skywalking_jvm_arguments "$ROOT" "$agent_id")"
+      mvn_args+=(-Dspring-boot.run.jvmArguments="$jvm")
+      sw_env=(SW_AGENT_NAME="$agent_id" \
+        SW_AGENT_COLLECTOR_BACKEND_SERVICES="${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-127.0.0.1:11800}")
+      echo "  (+ SkyWalking $agent_id)"
+    else
+      echo "  (ENABLE_SKYWALKING=1 但未找到 Agent，普通启动)" >&2
+    fi
+  fi
+  (cd "$module" && env "${sw_env[@]}" "$@" mvn "${mvn_args[@]}" >"$log" 2>&1) &
   echo $! >> "$LOG_DIR/pids.txt"
 }
 

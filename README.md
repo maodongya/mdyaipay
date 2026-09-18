@@ -22,7 +22,8 @@
 
 - [`docs/overview-design.md`](docs/overview-design.md)：概要设计
 - [`docs/detail-design.md`](docs/detail-design.md)：详细设计（含网银、代扣、代付分型与包结构）
-- [`docs/方便人理解代码规约.md`](docs/方便人理解代码规约.md)：可读性规约（命名、分层、注释与文档同步）
+- [`docs/方便人理解代码规约.md`](docs/方便人理解代码规约.md)：可读性规约（§5.0 类/方法中文 Javadoc、单文件 ≤500 行、单方法 ≤50 行有效代码；命名、分层、功能块）
+- [`docs/设计原则规约.md`](docs/设计原则规约.md)：SOLID / KISS / DRY / SOC / YAGNI
 - [`docs/设计模式规约.md`](docs/设计模式规约.md)：GoF 23 种模式在本工程中的选用与落点
 
 ## 构建与运行

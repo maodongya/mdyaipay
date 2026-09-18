@@ -1,5 +1,5 @@
 ---
-description: 强制遵循 docs/方便人理解代码规约.md（中文 Javadoc 与功能块）
+description: 强制遵循 docs/方便人理解代码规约.md（中文 Javadoc、行数上限、功能块）
 globs: "**/*.java"
 alwaysApply: true
 ---
@@ -8,26 +8,28 @@ alwaysApply: true
 
 完整条文见 [`docs/方便人理解代码规约.md`](../../docs/方便人理解代码规约.md)。本规则为 **MANDATORY**，新代码与改动文件须在同次提交内满足。
 
-## 必须做
+## 必须做（§5.0）
 
 - **标识符英文**；给人看的 **Javadoc、`/* 功能块 */`、行内 `//` 用简体中文**。
-- 每个模块/子包：有职责说明的 `package-info.java`（或子模块 `pom.xml` description）。
-- 每个 **public 类 / 接口 / 枚举**：类上方中文 Javadoc（职责 + 不负责什么）。
-- 对其它模块或 HTTP/Dubbo 暴露的 **public 方法**：中文 Javadoc（做什么、前置条件、**幂等语义**、副作用）。
-- **复杂编排**（application 服务 public 方法、Gateway Filter/Processor、`invoke` 类多步逻辑）：按规约 **§3.1** 用 `/* 功能块：… — … */` 分块，块标题用业务/技术意图词，写 **why**。
+- **每个类**（含 package-private、测试类）：类型声明前 **中文 Javadoc**（职责；public 补充「不负责什么」）。
+- **每个方法**（含 private、构造器、`@Test`）：方法声明前 **中文 Javadoc**；对外 public API 写前置条件、**幂等**、副作用。
+- **单文件 ≤ 500 行**（含空行、注释、import）；**单方法 ≤ 50 行有效代码**（不计注释行与空行，见规约 §5.0 计法）。
+- 每个模块/子包：`package-info.java`（或子模块 `pom.xml` description）。
+- **复杂编排**（application 服务 public 方法、Gateway Filter/Processor、多步 `invoke`）：按 **§4.1** 用 `/* 功能块：… — … */` 分块，写 **why**。
 - 改行为时同步改注释；禁止只合代码、注释「过后再补」。
 
 ## 禁止
 
 - 用英文写给人看的类/方法 Javadoc（协议字段名等片段除外）。
 - 行尾注释复述代码（`// 保存订单`）。
-- 新增 public API 无类级或方法级中文说明。
+- 无类级/方法级中文 Javadoc 的新增或改动 API。
+- 新增超过 500 行的文件，或把已超限文件继续加长；新增超过 50 行有效代码的方法（应抽取）。
 
-## 提交前自检（规约 §12 精简）
+## 提交前自检（规约 §13 精简）
 
-1. 新增/改动的 public 类型是否都有中文 Javadoc？
+1. **每个类、每个方法**是否都有中文 Javadoc？文件 ≤ 500 行？方法 ≤ 50 行有效代码？
 2. 对外 public 方法是否说明幂等与前置条件？
-3. 超过一屏的编排方法是否有功能块目录？
+3. 超长编排是否有 **§4.1** 功能块？
 4. 新包是否补了 `package-info.java`？
 
 未满足以上任一项，视为未完成该次改动。

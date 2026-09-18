@@ -13,11 +13,12 @@
     <artifactId>mdyaipay-tools</artifactId>
     <packaging>pom</packaging>
     <name>mdyaipay-tools</name>
-    <description>公共工具聚合：common、timetrace、loadtest 等无业务编排工具</description>
+    <description>公共工具聚合：common、timetrace、trace-core、loadtest 等无业务编排工具</description>
 
     <modules>
         <module>mdyaipay-tools-common</module>
         <module>mdyaipay-tools-timetrace</module>
+        <module>mdyaipay-tools-trace-core</module>
         <module>mdyaipay-tools-loadtest</module>
     </modules>
 </project>
