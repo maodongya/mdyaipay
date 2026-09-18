@@ -16,6 +16,7 @@ user:
     datacenter-id: ${USER_ID_DATACENTER_ID:1}
   jdbc:
     init-schema: ${USER_JDBC_INIT_SCHEMA:true}
+    reset-schema: ${USER_JDBC_RESET_SCHEMA:false}
   merchant:
     sign:
       max-skew-seconds: ${USER_MERCHANT_SIGN_MAX_SKEW:300}

@@ -29,7 +29,7 @@ python3 scripts/java-comment-audit.py
 
 ### 已重点补全的模块
 
-- `mdyaipay-payment`：domain / service / repository / mybatis / gateway / config
+- `mdyaipay-payment`：domain / service / repository + repository.mybatis / gateway + gateway.mock / config
 - `mdyaipay-user`：MyBatis Mapper 与 Row
 - `mdyaipay-payment-api`、`mdyaipay-gateway`（前序提交）
 - `mdyaipay-tools-loadtest-core` 各子包说明

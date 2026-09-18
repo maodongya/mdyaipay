@@ -1,17 +1,22 @@
 package com.mdyaipay.payment.service.payout;
 
-import com.mdyaipay.payment.domain.payout.PayoutGateway;
+import com.mdyaipay.payment.gateway.PayoutGateway;
 import com.mdyaipay.payment.domain.payout.PayoutOrder;
-import com.mdyaipay.payment.domain.payout.PayoutOrderRepository;
+import com.mdyaipay.payment.repository.PayoutOrderRepository;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
 /**
  * 代付应用编排：校验、幂等、调 {@link PayoutGateway}、持久化。
+ * <p>
+ * 写路径在 READ COMMITTED 事务内执行（InnoDB {@code payout_order}）。
  */
 @Service
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class PayoutApplicationService {
     private final PayoutOrderRepository orderRepository;
     private final PayoutGateway payoutGateway;
@@ -42,7 +47,6 @@ public class PayoutApplicationService {
         }
 
         PayoutOrder order = new PayoutOrder(payoutNo, amount, channel, payeeRef);
-        orderRepository.save(order);
         order.markProcessing();
         orderRepository.save(order);
 

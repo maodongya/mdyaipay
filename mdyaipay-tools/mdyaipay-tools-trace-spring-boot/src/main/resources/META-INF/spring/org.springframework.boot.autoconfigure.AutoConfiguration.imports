@@ -1,0 +1,4 @@
+com.mdyaipay.tools.trace.autoconfigure.TraceAutoConfiguration
+com.mdyaipay.tools.trace.autoconfigure.TraceServletAutoConfiguration
+com.mdyaipay.tools.trace.autoconfigure.TraceGatewayAutoConfiguration
+com.mdyaipay.tools.trace.autoconfigure.TraceDubboAutoConfiguration

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mdyaipay.payment.mybatis.mapper.WithholdOrderMapper">
+<mapper namespace="com.mdyaipay.payment.repository.mybatis.mapper.WithholdOrderMapper">
 
     <insert id="upsert">
-        INSERT INTO withhold_order (deduction_no, agreement_no, amount, channel, status, created_at, updated_at)
-        VALUES (#{deductionNo}, #{agreementNo}, #{amount}, #{channel}, #{status}, #{createdAt}, #{updatedAt})
+        INSERT INTO withhold_order (id, deduction_no, agreement_no, amount, channel, status, created_at, updated_at)
+        VALUES (#{id}, #{deductionNo}, #{agreementNo}, #{amount}, #{channel}, #{status}, #{createdAt}, #{updatedAt})
         ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = VALUES(updated_at)
     </insert>
 
-    <select id="findByDeductionNo" resultType="com.mdyaipay.payment.mybatis.row.WithholdOrderRow">
-        SELECT deduction_no, agreement_no, amount, channel, status, created_at, updated_at
+    <select id="findByDeductionNo" resultType="com.mdyaipay.payment.repository.mybatis.row.WithholdOrderRow">
+        SELECT id, deduction_no, agreement_no, amount, channel, status, created_at, updated_at
         FROM withhold_order
         WHERE deduction_no = #{deductionNo}
     </select>

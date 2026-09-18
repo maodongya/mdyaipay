@@ -74,8 +74,10 @@ mdyaipay-payment:20881 / mdyaipay-user:20882
 # 或单模块
 ./scripts/run-with-skywalking-agent.sh mdyaipay-payment
 
-# 压测时挂 Agent
-# ENABLE_SKYWALKING=1 ./scripts/run-payment-loadtest.sh
+# 压测时挂 Agent（OAP 已起且 Agent 已下载时，run-payment-loadtest 默认 auto 启用）
+# ./scripts/run-payment-loadtest.sh
+# 强制关闭：ENABLE_SKYWALKING=0 ./scripts/run-payment-loadtest.sh
+# 顺带起 OAP：SKYWALKING_START_OAP=1 ./scripts/run-payment-loadtest.sh
 ```
 
 ### 4.2 访问地址

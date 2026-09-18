@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mdyaipay.payment.mybatis.mapper.PayoutOrderMapper">
+<mapper namespace="com.mdyaipay.payment.repository.mybatis.mapper.PayoutOrderMapper">
 
     <insert id="upsert">
-        INSERT INTO payout_order (payout_no, amount, channel, payee_ref, status, created_at, updated_at)
-        VALUES (#{payoutNo}, #{amount}, #{channel}, #{payeeRef}, #{status}, #{createdAt}, #{updatedAt})
+        INSERT INTO payout_order (id, payout_no, amount, channel, payee_ref, status, created_at, updated_at)
+        VALUES (#{id}, #{payoutNo}, #{amount}, #{channel}, #{payeeRef}, #{status}, #{createdAt}, #{updatedAt})
         ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = VALUES(updated_at)
     </insert>
 
-    <select id="findByPayoutNo" resultType="com.mdyaipay.payment.mybatis.row.PayoutOrderRow">
-        SELECT payout_no, amount, channel, payee_ref, status, created_at, updated_at
+    <select id="findByPayoutNo" resultType="com.mdyaipay.payment.repository.mybatis.row.PayoutOrderRow">
+        SELECT id, payout_no, amount, channel, payee_ref, status, created_at, updated_at
         FROM payout_order
         WHERE payout_no = #{payoutNo}
     </select>

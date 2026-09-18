@@ -3,7 +3,7 @@
     <Properties>
         <Property name="TIMETRACE_LOG">${spring:mdyaipay.timetrace.log-file:-logs/timetrace.log}</Property>
         <Property name="APP_LOG">${spring:logging.file.name:-logs/mdyaipay-payment.log}</Property>
-        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId=%X{traceId} spanId=%X{spanId} - %msg%n</Property>
     </Properties>
 
     <Appenders>

@@ -1,2 +1,2 @@
--- 已有库增量：CREATE TABLE IF NOT EXISTS 不会补列
-ALTER TABLE payment_order ADD COLUMN merchant_id BIGINT NULL;
+-- 已有库增量（init-schema 时幂等；1060/1061 由 PaymentSchemaInitializer 忽略）
+-- 新装库请配合 reset-mysql.sql；此处仅保留历史迁移占位。

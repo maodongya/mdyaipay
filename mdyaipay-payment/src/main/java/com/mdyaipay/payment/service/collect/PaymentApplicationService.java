@@ -1,8 +1,8 @@
 package com.mdyaipay.payment.service.collect;
 
-import com.mdyaipay.payment.domain.collect.PaymentGateway;
+import com.mdyaipay.payment.gateway.PaymentGateway;
 import com.mdyaipay.payment.domain.collect.PaymentOrder;
-import com.mdyaipay.payment.domain.collect.PaymentOrderRepository;
+import com.mdyaipay.payment.repository.PaymentOrderRepository;
 import com.mdyaipay.payment.domain.collect.PaymentProductType;
 import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
@@ -10,13 +10,18 @@ import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
 import com.mdyaipay.tools.timetrace.TimeTrace;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
 /**
  * 收单应用编排：校验、幂等、调 {@link PaymentGateway}、持久化。
+ * <p>
+ * 写路径在 READ COMMITTED 事务内执行（InnoDB {@code payment_order}），与连接池 {@code transaction-isolation} 一致。
  */
 @Service
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class PaymentApplicationService {
     private final PaymentOrderRepository orderRepository;
     private final PaymentGateway paymentGateway;
@@ -66,7 +71,6 @@ public class PaymentApplicationService {
         }
 
         PaymentOrder order = new PaymentOrder(orderNo, amount, channel, productType, merchantId);
-        // orderRepository.save(order);
         order.markProcessing();
         orderRepository.save(order);
 
@@ -106,7 +110,11 @@ public class PaymentApplicationService {
         return orderRepository.save(order);
     }
 
-    /** 按 {@code orderNo} 查询收单；不存在时抛 {@link IllegalArgumentException}。 */
+    /**
+     * 按业务单号查询收单；无则抛 {@link IllegalArgumentException}。
+     * <p>幂等：只读，无副作用。</p>
+     */
+    @Transactional(readOnly = true)
     public PaymentOrder getPayment(String orderNo) {
         return orderRepository.findByOrderNo(orderNo)
                 .orElseThrow(() -> new IllegalArgumentException("order not found: " + orderNo));

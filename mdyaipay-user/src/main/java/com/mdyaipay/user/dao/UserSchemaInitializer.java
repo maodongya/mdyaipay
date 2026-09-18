@@ -17,8 +17,15 @@ public final class UserSchemaInitializer {
     private UserSchemaInitializer() {
     }
 
-    public static void apply(DataSource dataSource) {
+    /**
+     * @param dataSource  数据源
+     * @param resetSchema true 时先 DROP 商户域表再 CREATE
+     */
+    public static void apply(DataSource dataSource, boolean resetSchema) {
         Objects.requireNonNull(dataSource, "dataSource must not be null");
+        if (isMySql(dataSource) && resetSchema) {
+            executeScript(dataSource, "db/reset-merchant-mysql.sql", false);
+        }
         executeScript(dataSource, "db/schema-merchant-mysql.sql", false);
         if (isMySql(dataSource)) {
             executeScript(dataSource, "db/patch-merchant-mysql.sql", true);

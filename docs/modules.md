@@ -10,6 +10,7 @@
 | 公共 | `mdyaipay-tools-common` | 雪花 ID、金额分/元工具、统一 API 响应与错误码（无业务编排） |
 | 公共 | `mdyaipay-tools-timetrace` | Spring AOP `@TimeTrace`：入口方法耗时与慢调用报告（无业务编排） |
 | 公共 | `mdyaipay-tools-trace-core` | 分布式 Trace 上下文与 W3C/sw8 传播（仅 JDK，无 Spring） |
+| 公共 | `mdyaipay-tools-trace-spring-boot` | Trace 自动配置：Servlet/Gateway/Dubbo Filter、MDC、出站 HTTP 头 |
 | 公共（聚合） | `mdyaipay-tools-loadtest` | 压测工具聚合：core + HTTP/Dubbo/Spring Cloud 驱动 + CLI |
 | 公共 | `mdyaipay-tools-loadtest-core` | 压测引擎、动态指标、报告模型 |
 | 公共 | `mdyaipay-tools-loadtest-http` | HTTP/HTTPS 压测驱动 |

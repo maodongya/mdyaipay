@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mdyaipay.gateway.dubbo.PaymentGatewayClient;
 import com.mdyaipay.payment.api.gateway.command.CollectPaymentCommand;
 import com.mdyaipay.tools.model.ApiResponse;
+import com.mdyaipay.tools.trace.http.TraceWebExchangeSupport;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -16,8 +17,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -55,8 +54,7 @@ public class MerchantSignedCollectGatewayFilter implements GlobalFilter, Ordered
                     dataBuffer.read(raw);
                     DataBufferUtils.release(dataBuffer);
                     String body = new String(raw, StandardCharsets.UTF_8);
-                    return Mono.fromCallable(() -> collectViaDubbo(body))
-                            .subscribeOn(Schedulers.boundedElastic())
+                    return TraceWebExchangeSupport.callBlocking(exchange, () -> collectViaDubbo(body))
                             .flatMap(responseBytes -> writeOk(exchange, responseBytes));
                 })
                 .onErrorResume(MerchantSignedCollectException.class, ex -> writeError(exchange, ex));

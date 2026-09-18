@@ -1,18 +1,22 @@
 package com.mdyaipay.payment.service.collect;
 
-import com.mdyaipay.payment.domain.collect.PaymentGateway;
+import com.mdyaipay.payment.gateway.PaymentGateway;
 import com.mdyaipay.payment.domain.collect.PaymentOrder;
 import com.mdyaipay.payment.domain.collect.PaymentProductType;
 import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
 import com.mdyaipay.payment.testsupport.MapPaymentOrderRepository;
 import com.mdyaipay.payment.testsupport.PaymentTestSupport;
-import com.mdyaipay.payment.gateway.MockPaymentGateway;
+import com.mdyaipay.payment.gateway.mock.MockPaymentGateway;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+/**
+ * 收单应用服务单测：同步成功、网银待确认、幂等与非法金额。
+ */
 class PaymentApplicationServiceTest {
 
+    /** 快捷收单渠道同步成功则订单 SUCCESS。 */
     @Test
     void shouldPaySuccessWhenGatewayReturnsSyncSuccess() {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
@@ -27,6 +31,7 @@ class PaymentApplicationServiceTest {
         Assertions.assertEquals(PaymentProductType.QUICK_COLLECTION, order.getProductType());
     }
 
+    /** 网银收单保持 PROCESSING 直至渠道确认。 */
     @Test
     void shouldStayProcessingWhenOnlineBankingAwaitingChannel() {
         PaymentApplicationService service = new PaymentApplicationService(
@@ -40,6 +45,7 @@ class PaymentApplicationServiceTest {
         Assertions.assertEquals(PaymentStatus.PROCESSING, order.getStatus());
     }
 
+    /** 网银回调成功将订单迁到 SUCCESS。 */
     @Test
     void shouldConfirmOnlineBankingChannelSuccess() {
         PaymentApplicationService service = new PaymentApplicationService(
@@ -53,6 +59,7 @@ class PaymentApplicationServiceTest {
         Assertions.assertEquals(PaymentStatus.SUCCESS, confirmed.getStatus());
     }
 
+    /** 确认不存在的订单抛 IllegalArgumentException。 */
     @Test
     void shouldRejectConfirmWhenOrderNotFound() {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
@@ -66,6 +73,7 @@ class PaymentApplicationServiceTest {
                 service.confirmChannelPayment("MISSING", true));
     }
 
+    /** 快捷单不允许走渠道确认。 */
     @Test
     void shouldRejectConfirmWhenNotOnlineBanking() {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
@@ -80,6 +88,7 @@ class PaymentApplicationServiceTest {
                 service.confirmChannelPayment("ORDER-QUICK-X", true));
     }
 
+    /** 金额非法时拒绝下单。 */
     @Test
     void shouldThrowWhenAmountInvalid() {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
@@ -93,6 +102,7 @@ class PaymentApplicationServiceTest {
                 service.createAndPay("ORDER-2", 0L, "MOCK"));
     }
 
+    /** 同一 orderNo 再次下单返回原单。 */
     @Test
     void shouldKeepIdempotentForSameOrderNo() {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;
@@ -109,6 +119,7 @@ class PaymentApplicationServiceTest {
         Assertions.assertEquals(100L, second.getAmount());
     }
 
+    /** 未传 orderNo 时分配雪花单号。 */
     @Test
     void shouldAssignSnowflakeOrderNoWhenClientOmitsOrderNo() {
         PaymentGateway gateway = order -> PaymentSubmitResult.SYNC_SUCCESS;

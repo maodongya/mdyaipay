@@ -1,6 +1,8 @@
 package com.mdyaipay.tools.model;
 
 import com.mdyaipay.tools.exception.ErrorCode;
+import com.mdyaipay.tools.trace.TraceContext;
+import com.mdyaipay.tools.trace.TraceIds;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,7 +25,7 @@ public class ApiResponse<T> {
         response.code = ErrorCode.SUCCESS.getCode();
         response.message = "success";
         response.data = data;
-        response.traceId = newTraceId();
+        response.traceId = resolveTraceId();
         response.timestamp = Instant.now().toString();
         return response;
     }
@@ -32,7 +34,7 @@ public class ApiResponse<T> {
         ApiResponse<T> response = new ApiResponse<>();
         response.code = code;
         response.message = message;
-        response.traceId = newTraceId();
+        response.traceId = resolveTraceId();
         response.timestamp = Instant.now().toString();
         return response;
     }
@@ -41,7 +43,17 @@ public class ApiResponse<T> {
         return fail(errorCode.getCode(), errorCode.getMessage());
     }
 
-    private static String newTraceId() {
+    /**
+     * 优先使用当前 {@link TraceContext} 的 traceId（展示为 12 位）；无上下文时生成随机 id。
+     */
+    private static String resolveTraceId() {
+        return TraceContext.currentTraceId()
+                .map(TraceIds::toDisplayTraceId)
+                .orElseGet(ApiResponse::fallbackTraceId);
+    }
+
+    /** 无 Trace 上下文时的回退 id（12 位 hex）。 */
+    private static String fallbackTraceId() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 

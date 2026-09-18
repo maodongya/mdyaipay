@@ -36,6 +36,8 @@ public class UserProperties {
 
     public static class Jdbc {
         private boolean initSchema;
+        /** true 时启动先 DROP 商户域表再建表（仅 MySQL）。 */
+        private boolean resetSchema;
 
         public boolean isInitSchema() {
             return initSchema;
@@ -43,6 +45,14 @@ public class UserProperties {
 
         public void setInitSchema(boolean initSchema) {
             this.initSchema = initSchema;
+        }
+
+        public boolean isResetSchema() {
+            return resetSchema;
+        }
+
+        public void setResetSchema(boolean resetSchema) {
+            this.resetSchema = resetSchema;
         }
     }
 

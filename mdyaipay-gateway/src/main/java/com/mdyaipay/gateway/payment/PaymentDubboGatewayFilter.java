@@ -7,6 +7,7 @@ import com.mdyaipay.payment.api.gateway.command.ChannelConfirmCommand;
 import com.mdyaipay.payment.api.gateway.command.CreatePayoutCommand;
 import com.mdyaipay.payment.api.gateway.command.CreateWithholdCommand;
 import com.mdyaipay.tools.model.ApiResponse;
+import com.mdyaipay.tools.trace.http.TraceWebExchangeSupport;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -18,7 +19,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
@@ -65,16 +65,14 @@ public class PaymentDubboGatewayFilter implements GlobalFilter, Ordered {
                         dataBuffer.read(raw);
                         DataBufferUtils.release(dataBuffer);
                         String body = new String(raw, StandardCharsets.UTF_8);
-                        return Mono.fromCallable(() -> invoke(path, method.name(), body))
-                                .subscribeOn(Schedulers.boundedElastic())
+                        return TraceWebExchangeSupport.callBlocking(exchange, () -> invoke(path, method.name(), body))
                                 .flatMap(responseBytes -> writeJson(exchange, 200, responseBytes));
                     })
                     .onErrorResume(IllegalArgumentException.class,
                             ex -> writeJson(exchange, 400, errorBody(ex.getMessage())));
         }
 
-        return Mono.fromCallable(() -> invoke(path, method.name(), ""))
-                .subscribeOn(Schedulers.boundedElastic())
+        return TraceWebExchangeSupport.callBlocking(exchange, () -> invoke(path, method.name(), ""))
                 .flatMap(responseBytes -> writeJson(exchange, 200, responseBytes))
                 .onErrorResume(IllegalArgumentException.class,
                         ex -> writeJson(exchange, 400, errorBody(ex.getMessage())));

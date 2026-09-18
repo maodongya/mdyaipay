@@ -9,6 +9,10 @@ spring:
     username: ${PAYMENT_JDBC_USER:root}
     password: ${PAYMENT_JDBC_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 与 InnoDB 表（payment_order 等）上 @Transactional(READ_COMMITTED) 一致
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      maximum-pool-size: ${PAYMENT_HIKARI_MAXIMUM_POOL_SIZE:20}
 
 mdyaipay:
   timetrace:
@@ -26,10 +30,11 @@ payment:
     datacenter-id: ${PAYMENT_ID_DATACENTER_ID:1}
   jdbc:
     init-schema: ${PAYMENT_JDBC_INIT_SCHEMA:true}
+    reset-schema: ${PAYMENT_JDBC_RESET_SCHEMA:false}
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-handlers-package: com.mdyaipay.payment.mybatis
+  type-handlers-package: com.mdyaipay.payment.repository.mybatis
   configuration:
     map-underscore-to-camel-case: true
 

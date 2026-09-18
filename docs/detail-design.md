@@ -7,16 +7,17 @@ com.mdyaipay.payment
 ├── MdyaipayPaymentApplication         # Spring Boot 入口（8081 仅 actuator；Dubbo 20881）
 ├── api.dubbo                          # PaymentGatewayFacadeImpl（网关内网 RPC）
 ├── service                            # 应用服务（collect | withhold | payout）
-├── domain                             # 聚合、仓储接口、渠道端口
-├── repository                         # MyBatis 仓储实现、建表初始化
-├── mybatis                            # Mapper 接口、Row、TypeHandler；XML 在 resources/mapper
-├── gateway                            # 渠道 Mock（实现 domain.*Gateway）
+├── domain                             # 聚合、枚举、值对象（collect | withhold | payout）
+├── repository                         # 仓储 *接口*
+│   └── mybatis                        # MyBatis 实现、Mapper、Row、TypeHandler、建表初始化
+├── gateway                            # 渠道 *接口*
+│   └── mock                           # Mock 适配器
 └── config                             # MyBatis 扫描、Mock 渠道 Bean、可选 init-schema
 ```
 
-配置：`application.yml`（`spring.datasource` + `mybatis.*`）；`payment.jdbc.init-schema=true` 时执行 `db/schema-mysql.sql`。
+配置：`application.yml`（`spring.datasource` + `mybatis.*`）；`payment.jdbc.init-schema=true` 时执行 `db/schema-mysql.sql`。Mapper XML 在 `resources/mapper`。
 
-各能力子包内类型命名与原先扁平 `domain` 一致，例如 `collect` 含 `PaymentOrder`、`PaymentGateway`、`PaymentSubmitResult` 等；`withhold` / `payout` 同理。
+`domain` 按能力分子包（如 `collect` 含 `PaymentOrder`、`PaymentSubmitResult`）；仓储与渠道端口分别在 `repository` / `gateway`，不再放入 domain。
 
 其他子模块当前以 `package-info` 占位，包根分别为：`com.mdyaipay.user`、`com.mdyaipay.accounting`、`com.mdyaipay.finance`、`com.mdyaipay.gateway`、`com.mdyaipay.cashier`。
 
@@ -117,7 +118,7 @@ com.mdyaipay.payment
 
 | 实现 | 包路径 | 用途 |
 |------|--------|------|
-| `MyBatis*OrderRepository` + `*Mapper` | `infrastructure.persistence.mysql` | 生产持久化（MyBatis XML） |
+| `MyBatis*OrderRepository` + `*Mapper` | `repository.mybatis`（及 `mapper` / `row`） | 生产持久化（MyBatis XML） |
 
 装配：Spring 组件扫描注册 `@Service`、 `@Repository`、MyBatis `@Mapper`。
 

@@ -2,6 +2,7 @@ package com.mdyaipay.gateway.payment;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mdyaipay.tools.trace.http.OutgoingHttpTraceSupport;
 import com.mdyaipay.user.api.merchant.gateway.ResolveOpenApiCredentialResult;
 
 import java.net.URI;
@@ -30,11 +31,12 @@ public final class HttpOpenApiCredentialResolver implements OpenApiCredentialRes
         try {
             String encoded = URLEncoder.encode(appKey, StandardCharsets.UTF_8);
             URI uri = URI.create(userBaseUrl + "/internal/v1/open-api/credentials/resolve?appKey=" + encoded);
-            HttpRequest request = HttpRequest.newBuilder(uri)
+            HttpRequest.Builder builder = HttpRequest.newBuilder(uri)
                     .timeout(Duration.ofSeconds(10))
                     .GET()
-                    .header("Accept", "application/json")
-                    .build();
+                    .header("Accept", "application/json");
+            OutgoingHttpTraceSupport.inject(builder);
+            HttpRequest request = builder.build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 throw MerchantSignedCollectException.credentialFailed("http " + response.statusCode());

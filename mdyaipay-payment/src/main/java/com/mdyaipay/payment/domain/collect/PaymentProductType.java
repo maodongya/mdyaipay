@@ -1,7 +1,7 @@
 package com.mdyaipay.payment.domain.collect;
 
 /**
- * 收单类产品形态：网银与快捷等同属「资金入账」链路，由 {@link PaymentGateway} 执行；
+ * 收单类产品形态：网银与快捷等同属「资金入账」链路，由 {@link com.mdyaipay.payment.gateway.PaymentGateway} 执行；
  * 代扣、代付使用独立聚合与网关接口。
  */
 public enum PaymentProductType {

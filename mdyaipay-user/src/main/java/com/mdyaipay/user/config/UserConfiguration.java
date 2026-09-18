@@ -34,8 +34,8 @@ public class UserConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "user.jdbc.init-schema", havingValue = "true")
-    ApplicationRunner userSchemaInitializer(DataSource dataSource) {
-        return args -> UserSchemaInitializer.apply(dataSource);
+    ApplicationRunner userSchemaInitializer(DataSource dataSource, UserProperties properties) {
+        return args -> UserSchemaInitializer.apply(dataSource, properties.getJdbc().isResetSchema());
     }
 
     @Bean

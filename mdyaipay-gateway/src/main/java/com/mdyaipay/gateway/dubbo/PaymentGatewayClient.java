@@ -11,6 +11,7 @@ import com.mdyaipay.payment.api.gateway.dto.PaymentOrderView;
 import com.mdyaipay.payment.api.gateway.dto.PayoutOrderView;
 import com.mdyaipay.payment.api.gateway.dto.WithholdOrderView;
 import com.mdyaipay.tools.model.ApiResponse;
+import com.mdyaipay.tools.trace.http.OutgoingHttpTraceSupport;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -76,12 +77,13 @@ public class PaymentGatewayClient {
     private ApiResponse<PaymentOrderView> postCollect(CollectPaymentCommand command) {
         try {
             String body = json.writeValueAsString(command);
-            HttpRequest request = HttpRequest.newBuilder(
+            HttpRequest.Builder builder = HttpRequest.newBuilder(
                             URI.create(paymentBaseUrl + "/internal/v1/payment-gateway/collect"))
                     .timeout(Duration.ofSeconds(30))
                     .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
+                    .POST(HttpRequest.BodyPublishers.ofString(body));
+            OutgoingHttpTraceSupport.inject(builder);
+            HttpRequest request = builder.build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 return ApiResponse.fail(response.statusCode(), "payment http " + response.statusCode());

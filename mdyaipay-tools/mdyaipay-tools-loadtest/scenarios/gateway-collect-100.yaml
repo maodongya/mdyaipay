@@ -1,0 +1,31 @@
+# 网关加密收单约 100 笔：12 并发、正式阶段 3s（预热后约 100 量级）
+name: gateway-collect-100
+protocol: http
+load:
+  threads: 12
+  durationSeconds: 3
+  rampUpSeconds: 0
+  thinkTimeMillis: 0
+  targetRps: null
+metrics:
+  percentiles: [0.5, 0.9, 0.99]
+  warmupSeconds: 0
+  recordErrors: true
+  maxErrorSamples: 20
+target:
+  url: http://127.0.0.1:8041/api/v1/payments/collect
+  method: POST
+  headers:
+    Content-Type: application/json
+  bodyMode: merchantEncryptedCollect
+  merchantEncryptedCollect:
+    credentialsFile: target/loadtest-merchant-credentials.json
+    amount: 100
+    channel: MOCK
+    productType: QUICK_COLLECTION
+    orderNoPrefix: LT-100-
+  timeoutMillis: 15000
+  expectStatus: [200]
+report:
+  formats: [console, json, markdown]
+  outputDir: target/loadtest-reports

@@ -19,6 +19,7 @@
         <module>mdyaipay-tools-common</module>
         <module>mdyaipay-tools-timetrace</module>
         <module>mdyaipay-tools-trace-core</module>
+        <module>mdyaipay-tools-trace-spring-boot</module>
         <module>mdyaipay-tools-loadtest</module>
     </modules>
 </project>

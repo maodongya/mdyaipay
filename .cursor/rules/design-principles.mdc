@@ -9,10 +9,10 @@ alwaysApply: true
 
 ## 必须遵守
 
-- **SOLID**：单职责（可读性规约 §1）；扩展用 Gateway / SPI / 新实现类，少改应用服务核心；api Facade 小而专；domain 定端口、infrastructure 实现，依赖单向。
+- **SOLID**：单职责（可读性规约 §1）；扩展用 Gateway / SPI / 新实现类，少改应用服务核心；api Facade 小而专；端口在接口包、实现在对应实现包（payment：`repository`/`gateway` vs `repository.mybatis`/`gateway.mock`），依赖单向。
 - **KISS**：最小正确解法；控制流直白（可读性规约 §4）；无多变体时不引入模式堆叠；避免超过 3 层间接才触达业务规则。
 - **DRY**：业务规则不复制；≥2 处相同逻辑须抽取（tools-common 或 domain 单入口）；不为 DRY 造上帝 Utils。
-- **SOC**：模块与 application/domain/infrastructure 分层；gateway 只做接入；横切 tools 不依赖业务模块。
+- **SOC**：模块与 service/domain/接口包/实现包 分层；`mdyaipay-gateway` 只做接入；横切 tools 不依赖业务模块。
 - **YAGNI**：无文档/需求支撑的「将来」不写；无第二实现时不建抽象基类；diff 只做当前一件事。
 
 ## 冲突优先级

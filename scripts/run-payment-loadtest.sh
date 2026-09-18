@@ -38,6 +38,36 @@ wait_health() {
 # shellcheck source=skywalking-agent-env.sh
 source "$ROOT/scripts/skywalking-agent-env.sh"
 
+if [[ "${SKYWALKING_START_OAP:-0}" == "1" ]]; then
+  "$ROOT/scripts/run-skywalking.sh"
+fi
+
+# ENABLE_SKYWALKING: 1=强制开 Agent；0=强制关；未设且 OAP:11800 可达且 Agent 存在则自动开
+skywalking_loadtest_enabled() {
+  case "${ENABLE_SKYWALKING:-auto}" in
+    1|true|yes) return 0 ;;
+    0|false|no) return 1 ;;
+    auto)
+      nc -z 127.0.0.1 11800 2>/dev/null && skywalking_require_agent "$ROOT" 2>/dev/null
+      ;;
+    *) return 1 ;;
+  esac
+}
+
+SKYWALKING_FOR_LOADTEST=0
+if skywalking_loadtest_enabled; then
+  if ! skywalking_require_agent "$ROOT" 2>/dev/null; then
+    echo "下载 SkyWalking Java Agent ..."
+    "$ROOT/scripts/download-skywalking-agent.sh"
+    skywalking_require_agent "$ROOT"
+  fi
+  SKYWALKING_FOR_LOADTEST=1
+  echo "SkyWalking Agent 已启用（上报 ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-127.0.0.1:11800}，UI http://127.0.0.1:8090）"
+elif [[ "${ENABLE_SKYWALKING:-auto}" == "auto" ]]; then
+  echo "未启用 SkyWalking：OAP 11800 不可达或缺少 Agent（先 ./scripts/run-skywalking.sh 与 download-skywalking-agent.sh）"
+  echo "说明：mdyaipay-tools-trace 只做日志/传播，不上报 OAP；APM 须 -javaagent。"
+fi
+
 start_if_needed() {
   local port=$1 name=$2 module=$3 log=$4
   shift 4
@@ -48,20 +78,20 @@ start_if_needed() {
   echo "starting $name ..."
   local mvn_args=(-q spring-boot:run)
   local sw_env=()
-  if [[ "${ENABLE_SKYWALKING:-0}" == "1" ]] && declare -f skywalking_jvm_arguments >/dev/null 2>&1; then
-    if skywalking_require_agent "$ROOT" 2>/dev/null; then
-      local agent_id="mdyaipay-${name}::${SW_AGENT_ENV:-local}"
-      local jvm
-      jvm="$(skywalking_jvm_arguments "$ROOT" "$agent_id")"
-      mvn_args+=(-Dspring-boot.run.jvmArguments="$jvm")
-      sw_env=(SW_AGENT_NAME="$agent_id" \
-        SW_AGENT_COLLECTOR_BACKEND_SERVICES="${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-127.0.0.1:11800}")
-      echo "  (+ SkyWalking $agent_id)"
-    else
-      echo "  (ENABLE_SKYWALKING=1 但未找到 Agent，普通启动)" >&2
-    fi
+  if [[ "$SKYWALKING_FOR_LOADTEST" == "1" ]] && declare -f skywalking_jvm_arguments >/dev/null 2>&1; then
+    local agent_id="mdyaipay-${name}::${SW_AGENT_ENV:-local}"
+    local jvm
+    jvm="$(skywalking_jvm_arguments "$ROOT" "$agent_id")"
+    mvn_args+=(-Dspring-boot.run.jvmArguments="$jvm")
+    sw_env=(SW_AGENT_NAME="$agent_id" \
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES="${SW_AGENT_COLLECTOR_BACKEND_SERVICES:-127.0.0.1:11800}")
+    echo "  (+ SkyWalking $agent_id)"
   fi
-  (cd "$module" && env "${sw_env[@]}" "$@" mvn "${mvn_args[@]}" >"$log" 2>&1) &
+  if ((${#sw_env[@]} > 0)); then
+    (cd "$module" && env "${sw_env[@]}" "$@" mvn "${mvn_args[@]}" >"$log" 2>&1) &
+  else
+    (cd "$module" && env "$@" mvn "${mvn_args[@]}" >"$log" 2>&1) &
+  fi
   echo $! >> "$LOG_DIR/pids.txt"
 }
 

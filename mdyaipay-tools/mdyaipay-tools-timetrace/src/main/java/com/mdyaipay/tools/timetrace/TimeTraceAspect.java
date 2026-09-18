@@ -28,10 +28,12 @@ public class TimeTraceAspect {
     }
 
     /**
+
      * 带 Spring .stereotype 的 Bean 的 public 方法（会话内计帧；不含 timetrace 自身包）。
      */
     @Pointcut(
             "execution(public * *(..)) && ("
+                    + "@within(org.apache.ibatis.annotations.Mapper) || 
                     + "@within(org.springframework.stereotype.Service) || "
                     + "@within(org.springframework.stereotype.Repository) || "
                     + "@within(org.springframework.stereotype.Component) || "

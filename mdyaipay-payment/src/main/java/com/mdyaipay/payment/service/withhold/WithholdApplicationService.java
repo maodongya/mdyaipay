@@ -1,18 +1,23 @@
 package com.mdyaipay.payment.service.withhold;
 
-import com.mdyaipay.payment.domain.withhold.WithholdGateway;
+import com.mdyaipay.payment.gateway.WithholdGateway;
 import com.mdyaipay.payment.domain.withhold.WithholdOrder;
-import com.mdyaipay.payment.domain.withhold.WithholdOrderRepository;
+import com.mdyaipay.payment.repository.WithholdOrderRepository;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
 import com.mdyaipay.tools.timetrace.TimeTrace;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
 /**
  * 代扣应用编排：校验、幂等、调 {@link WithholdGateway}、持久化。
+ * <p>
+ * 写路径在 READ COMMITTED 事务内执行（InnoDB {@code withhold_order}）。
  */
 @Service
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class WithholdApplicationService {
     private final WithholdOrderRepository orderRepository;
     private final WithholdGateway withholdGateway;
