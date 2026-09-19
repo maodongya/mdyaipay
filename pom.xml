@@ -104,6 +104,11 @@
             </dependency>
             <dependency>
                 <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-mybatis-spring-boot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
                 <artifactId>mdyaipay-tools-loadtest-core</artifactId>
                 <version>${project.version}</version>
             </dependency>

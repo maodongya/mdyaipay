@@ -55,13 +55,13 @@ class TraceSnapshotTest {
     }
 
     /**
-     * 从 inbound traceparent 续链视作子节点：远程父 span 未知深度时视为根，本段 spanLevel=2。
+     * 裸 {@code continueFromTraceParent} 使用默认续链入口层级；最终层级由 {@link Propagation} 结合 tracestate 决定。
      */
     @Test
-    void continueFromTraceParentUsesChildSpanLevel() {
+    void continueFromTraceParentUsesDefaultContinuedEntryLevel() {
         String incoming = TraceparentCodec.format(TRACE_ID, SPAN_ID, true);
         TraceSnapshot snapshot = TraceSnapshot.continueFromTraceParent(incoming);
-        assertEquals(2, snapshot.spanLevel());
+        assertEquals(TraceSnapshot.defaultContinuedEntrySpanLevel(), snapshot.spanLevel());
         assertEquals(SPAN_ID, snapshot.parentSpanId());
     }
 
@@ -76,12 +76,12 @@ class TraceSnapshotTest {
     }
 
     /**
-     * 带 parent 的四参组装无法得知真实深度，按父为根处理，spanLevel=2。
+     * 带 parent 的四参组装：续链入口仍为本服务根 spanLevel=1。
      */
     @Test
-    void ofWithParentInfersChildSpanLevel() {
+    void ofWithParentUsesLocalEntryRootLevel() {
         TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true);
-        assertEquals(2, snapshot.spanLevel());
+        assertEquals(1, snapshot.spanLevel());
         assertEquals(PARENT_SPAN_ID, snapshot.parentSpanId());
     }
 
@@ -99,15 +99,23 @@ class TraceSnapshotTest {
     }
 
     /**
-     * 根节点不得声明 spanLevel≠1；子节点不得声明 spanLevel&lt;2。
+     * 无 parent 时 spanLevel 必须为 1；层级须 ≥ 1。
      */
     @Test
     void ofRejectsInconsistentSpanLevel() {
         assertThrows(IllegalArgumentException.class,
                 () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, null, true, 2));
         assertThrows(IllegalArgumentException.class,
-                () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 1));
-        assertThrows(IllegalArgumentException.class,
                 () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 0));
+    }
+
+    /**
+     * 续链入口可显式声明 spanLevel=1 且保留 parentSpanId（tracestate 指定本服务根）。
+     */
+    @Test
+    void ofWithParentAllowsRootLevelOneWhenExplicit() {
+        TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 1);
+        assertEquals(1, snapshot.spanLevel());
+        assertEquals(PARENT_SPAN_ID, snapshot.parentSpanId());
     }
 }

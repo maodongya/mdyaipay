@@ -5,7 +5,7 @@ import com.mdyaipay.tools.trace.TextMapCarrier;
 import com.mdyaipay.tools.trace.TraceSnapshot;
 
 /**
- * 从入站 Carrier 解析 Trace，无头时新起根 trace。
+ * 从入站 Carrier 解析 Trace，无头时新起根 trace；续链时 span/level 由 {@link Propagation#extract} 生成本服务入口根快照。
  */
 public final class IncomingTraceResolver {
 

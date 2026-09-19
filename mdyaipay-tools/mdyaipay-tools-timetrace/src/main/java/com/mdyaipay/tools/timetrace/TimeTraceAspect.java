@@ -33,7 +33,7 @@ public class TimeTraceAspect {
      */
     @Pointcut(
             "execution(public * *(..)) && ("
-                    + "@within(org.apache.ibatis.annotations.Mapper) || 
+                    + "@within(org.apache.ibatis.annotations.Mapper) || "
                     + "@within(org.springframework.stereotype.Service) || "
                     + "@within(org.springframework.stereotype.Repository) || "
                     + "@within(org.springframework.stereotype.Component) || "

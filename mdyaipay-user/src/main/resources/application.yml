@@ -28,6 +28,13 @@ user:
     outbox-relay-interval-ms: 5000
     merchant-topic: MDYAIPAY_USER_MERCHANT
 
+mdyaipay:
+  mybatis:
+    sql-perf:
+      enabled: true
+      slow-threshold-millis: 0
+      include-trace-id: true
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-handlers-package: com.mdyaipay.user.dao.support.mybatis
@@ -51,6 +58,7 @@ rocketmq:
 
 logging:
   file:
+    # 由 log4j2-spring.xml 写入；启动时勿再对该路径 shell 重定向（>>），否则每条日志会重复
     name: logs/mdyaipay-user.log
 
 management:

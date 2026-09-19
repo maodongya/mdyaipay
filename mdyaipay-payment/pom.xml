@@ -82,6 +82,10 @@
             <artifactId>mdyaipay-tools-trace-spring-boot</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-mybatis-spring-boot</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo-spring-boot-starter</artifactId>
         </dependency>

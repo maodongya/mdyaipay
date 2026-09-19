@@ -11,14 +11,14 @@ import java.util.Objects;
  * 某一时刻的 Trace 快照，可绑定到 {@link TraceContext} 或写入 {@link TextMapCarrier}。
  * <p>
  * 不可变。跨进程/线程边界时用 {@link #childSpan()} 生成新 spanId，{@code traceId} 不变。
- * {@code spanLevel} 表示相对根 span 的深度：<strong>根为 1</strong>，每个子节点为父节点 {@code spanLevel + 1}。
- * W3C {@code traceparent} 不携带深度，入站续链时将远程父 span 视为根，故本段 {@code spanLevel=2}。
+ * {@code spanLevel} 表示<strong>本服务内</strong> span 深度：每个进程/服务的 HTTP(Dubbo) 入口恒为 {@link #ROOT_SPAN_LEVEL}，
+ * 进程内子节点为 {@code childSpan()} 逐层 +1。跨进程仅通过 {@code parentSpanId} 关联，不在入口累加全链深度。
  * <b>不负责</b>上报 OAP 或写 MDC。
  */
 public final class TraceSnapshot {
 
     /** 根 span 的层级，固定为 1。 */
-    static final int ROOT_SPAN_LEVEL = 1;
+    public static final int ROOT_SPAN_LEVEL = 1;
 
     /** 全链不变的 W3C traceId（32 位小写 hex）。 */
     private final String traceId;
@@ -95,7 +95,7 @@ public final class TraceSnapshot {
     }
 
     /**
-     * 显式字段组装（Outbox 还原、单测）。无 parent 时 spanLevel=1，有 parent 时按父为根记为 2。
+     * 显式字段组装（Outbox 还原、单测）。无 parent 或有 parent 的续链入口均默认 spanLevel=1。
      *
      * @param traceId      已有 traceId
      * @param spanId       本段 spanId
@@ -103,14 +103,13 @@ public final class TraceSnapshot {
      * @param sampled      采样位
      */
     public static TraceSnapshot of(String traceId, String spanId, String parentSpanId, boolean sampled) {
-        int spanLevel = parentSpanId == null ? ROOT_SPAN_LEVEL : ROOT_SPAN_LEVEL + 1;
-        return of(traceId, spanId, parentSpanId, sampled, spanLevel);
+        return of(traceId, spanId, parentSpanId, sampled, ROOT_SPAN_LEVEL);
     }
 
     /**
      * 显式字段组装，含 span 树深度（还原深层节点）。
      *
-     * @param spanLevel 根必须为 1；有 parent 时必须 ≥ 2
+     * @param spanLevel 无 parent 时必须为 1；有 parent 时须 ≥ 1（续链入口由 tracestate 指定）
      */
     public static TraceSnapshot of(
             String traceId, String spanId, String parentSpanId, boolean sampled, int spanLevel) {
@@ -125,7 +124,7 @@ public final class TraceSnapshot {
     /**
      * 从 inbound {@code traceparent} 继续：保留 traceId，生成本段新 spanId，父 span 为报头中的 spanId。
      * <p>
-     * 报头无深度信息，远程父 span 视为根，故本段 spanLevel=2。
+     * 入口 {@code spanLevel} 由 {@link Propagation#extract} 归一为本服务根；此处仅为占位。
      */
     public static TraceSnapshot continueFromTraceParent(String traceParentHeader) {
         TraceparentCodec.Parsed parsed = TraceparentCodec.parse(traceParentHeader);
@@ -133,10 +132,17 @@ public final class TraceSnapshot {
                 parsed.traceId(),
                 IdGenerator.newSpanId(),
                 parsed.spanId(),
-                ROOT_SPAN_LEVEL + 1,
+                ROOT_SPAN_LEVEL,
                 parsed.sampled(),
                 null,
                 Map.of());
+    }
+
+    /**
+     * 续链时本服务 HTTP/Dubbo 入口的 span 层级（恒为根）。
+     */
+    public static int defaultContinuedEntrySpanLevel() {
+        return ROOT_SPAN_LEVEL;
     }
 
     /**
@@ -197,7 +203,7 @@ public final class TraceSnapshot {
     }
 
     /**
-     * 相对根 span 的深度：根为 1，子节点为父节点 + 1。
+     * 本服务内 span 深度：入口为 1，子切片逐层递增。
      */
     public int spanLevel() {
         return spanLevel;
@@ -234,7 +240,7 @@ public final class TraceSnapshot {
     }
 
     /**
-     * 校验 spanLevel 与 parentSpanId 一致：根必须为 1 且无 parent；子节点必须 ≥ 2 且有 parent。
+     * 校验 spanLevel 与 parentSpanId：无 parent 时须为 1；有 parent 时须 ≥ 1。
      *
      * @return 合法的 spanLevel
      */
@@ -244,12 +250,9 @@ public final class TraceSnapshot {
         }
         if (parentSpanId == null) {
             if (spanLevel != ROOT_SPAN_LEVEL) {
-                throw new IllegalArgumentException("根 span 的 spanLevel 必须为 1");
+                throw new IllegalArgumentException("无 parent 时 spanLevel 必须为 1");
             }
             return spanLevel;
-        }
-        if (spanLevel < ROOT_SPAN_LEVEL + 1) {
-            throw new IllegalArgumentException("子 span 的 spanLevel 须 >= 2");
         }
         return spanLevel;
     }

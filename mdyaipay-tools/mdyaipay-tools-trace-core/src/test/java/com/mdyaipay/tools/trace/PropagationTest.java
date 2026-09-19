@@ -29,6 +29,30 @@ class PropagationTest {
         assertEquals(root.traceId(), extracted.traceId());
         assertNotEquals(root.spanId(), extracted.spanId());
         assertEquals(root.spanId(), extracted.parentSpanId());
+        assertEquals(1, extracted.spanLevel());
+    }
+
+    @Test
+    void injectExtractUsesLocalRootOnDownstreamEntry() {
+        TraceSnapshot caller = TraceSnapshot.startNew();
+        TextMapCarrier outbound = TextMapCarrier.create();
+        Propagation.inject(outbound, caller);
+
+        TraceSnapshot callee = Propagation.extract(outbound).orElseThrow();
+        assertEquals(1, callee.spanLevel());
+        assertEquals(caller.spanId(), callee.parentSpanId());
+    }
+
+    @Test
+    void extractIgnoresForeignSpanLevelInTraceState() {
+        TraceSnapshot root = TraceSnapshot.startNew();
+        TextMapCarrier carrier = TextMapCarrier.create();
+        carrier.set(TraceHeaders.TRACE_PARENT, root.toTraceParentHeader());
+        carrier.set(TraceHeaders.TRACE_STATE, TraceBaggageKeys.SPAN_LEVEL + "=5");
+
+        TraceSnapshot extracted = Propagation.extract(carrier).orElseThrow();
+        assertEquals(1, extracted.spanLevel());
+        assertEquals(root.spanId(), extracted.parentSpanId());
     }
 
     @Test

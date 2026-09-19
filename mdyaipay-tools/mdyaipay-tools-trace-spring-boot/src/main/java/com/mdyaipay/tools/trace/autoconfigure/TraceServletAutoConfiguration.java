@@ -20,9 +20,11 @@ import org.springframework.core.Ordered;
 public class TraceServletAutoConfiguration {
 
     @Bean
-    FilterRegistrationBean<ServletTraceFilter> servletTraceFilterRegistration(TraceMdcSupport mdcSupport) {
+    FilterRegistrationBean<ServletTraceFilter> servletTraceFilterRegistration(
+            TraceMdcSupport mdcSupport, TraceProperties properties) {
         FilterRegistrationBean<ServletTraceFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new ServletTraceFilter(mdcSupport));
+        registration.setFilter(
+                new ServletTraceFilter(mdcSupport, properties.getHttp().isLogEntryOnComplete()));
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 50);
         registration.addUrlPatterns("/*");
         return registration;

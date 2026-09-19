@@ -1,5 +1,6 @@
 package com.mdyaipay.tools.trace;
 
+import com.mdyaipay.tools.trace.internal.SpanLevelPropagation;
 import com.mdyaipay.tools.trace.internal.Sw8Fallback;
 import com.mdyaipay.tools.trace.internal.TraceStateCodec;
 
@@ -37,7 +38,8 @@ public final class Propagation {
         Objects.requireNonNull(carrier, "carrier");
         Objects.requireNonNull(snapshot, "snapshot");
         carrier.set(TraceHeaders.TRACE_PARENT, snapshot.toTraceParentHeader());
-        String traceState = TraceStateCodec.encode(snapshot.baggage());
+        String traceState = TraceStateCodec.encode(SpanLevelPropagation.forTraceStateEncode(
+                snapshot.baggage(), TraceSnapshot.ROOT_SPAN_LEVEL));
         if (traceState != null) {
             carrier.set(TraceHeaders.TRACE_STATE, traceState);
         }
@@ -66,7 +68,8 @@ public final class Propagation {
         }
         try {
             TraceSnapshot snapshot = TraceSnapshot.continueFromTraceParent(header);
-            return Optional.of(mergeTraceState(carrier, mergeSw8(carrier, snapshot)));
+            TraceSnapshot merged = mergeTraceState(carrier, mergeSw8(carrier, snapshot));
+            return Optional.of(applyContinuedEntryRoot(merged));
         } catch (IllegalArgumentException ex) {
             return Optional.empty();
         }
@@ -83,5 +86,25 @@ public final class Propagation {
     private static TraceSnapshot mergeTraceState(TextMapCarrier carrier, TraceSnapshot snapshot) {
         Map<String, String> baggage = TraceStateCodec.decode(carrier.get(TraceHeaders.TRACE_STATE));
         return baggage.isEmpty() ? snapshot : snapshot.withBaggage(baggage);
+    }
+
+    /**
+     * 续链入口：本服务第一个节点恒为根 {@link TraceSnapshot#ROOT_SPAN_LEVEL}；仅保留 traceId/父 span，剥离 tracestate 中的 spanLevel。
+     */
+    private static TraceSnapshot applyContinuedEntryRoot(TraceSnapshot continued) {
+        Map<String, String> businessBaggage = SpanLevelPropagation.withoutSpanLevel(continued.baggage());
+        TraceSnapshot rooted = TraceSnapshot.of(
+                continued.traceId(),
+                continued.spanId(),
+                continued.parentSpanId(),
+                continued.sampled(),
+                TraceSnapshot.ROOT_SPAN_LEVEL);
+        if (continued.sw8() != null) {
+            rooted = rooted.withSw8(continued.sw8());
+        }
+        if (!businessBaggage.isEmpty()) {
+            rooted = rooted.withBaggage(businessBaggage);
+        }
+        return rooted;
     }
 }

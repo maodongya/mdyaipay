@@ -4,6 +4,8 @@ import com.mdyaipay.tools.trace.TraceSnapshot;
 import com.mdyaipay.tools.trace.autoconfigure.TraceProperties;
 import org.slf4j.MDC;
 
+import java.util.Optional;
+
 /**
  * 将 {@link TraceSnapshot} 写入 SLF4J MDC，供 Log4j2 等布局引用 {@code %X{traceId}}。
  */
@@ -33,5 +35,19 @@ public final class TraceMdcSupport {
         }
         MDC.remove(mdc.getTraceIdKey());
         MDC.remove(mdc.getSpanIdKey());
+    }
+
+    /**
+     * 嵌套切片结束后恢复 MDC；无外层快照时等价于 {@link #clear()}。
+     */
+    public void restore(Optional<TraceSnapshot> previous) {
+        if (!mdc.isEnabled()) {
+            return;
+        }
+        if (previous == null || previous.isEmpty()) {
+            clear();
+        } else {
+            put(previous.get());
+        }
     }
 }
