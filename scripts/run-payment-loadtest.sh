@@ -16,7 +16,7 @@ sleep 2
 
 export PAYMENT_BASE_URL="${PAYMENT_BASE_URL:-http://127.0.0.1:8081}"
 echo "installing API modules to local Maven repo ..."
-mvn -q -pl mdyaipay-user-api,mdyaipay-payment-api,mdyaipay-tools/mdyaipay-tools-common -am install -DskipTests
+mvn -q -pl mdyaipay-user-api,mdyaipay-payment-api,mdyaipay-tools/mdyaipay-tools-common/mdyaipay-tools-common-core -am install -DskipTests
 
 LOG_DIR="$ROOT/target/local-services"
 CRED_FILE="$ROOT/target/loadtest-merchant-credentials.json"

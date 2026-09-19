@@ -1,0 +1,13 @@
+# 示例：网关加密收单入口令牌桶（文档/对照用；运行时以 application.yml 为准）
+name: gateway-collect-token-bucket
+rules:
+  - id: gateway-collect
+    match:
+      path: /api/v1/payments/collect
+      methods: [POST]
+    policy:
+      algorithm: TOKEN_BUCKET
+      limit: 300
+      window: 1s
+      refillRatePerSecond: 300
+    keyResolvers: [merchantAppKey, clientIp]

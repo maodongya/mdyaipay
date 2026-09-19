@@ -75,7 +75,7 @@
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
-            <artifactId>mdyaipay-tools-common</artifactId>
+            <artifactId>mdyaipay-tools-common-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
@@ -106,7 +106,7 @@
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
-            <artifactId>mdyaipay-tools-timetrace</artifactId>
+            <artifactId>mdyaipay-tools-timetrace-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

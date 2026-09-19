@@ -5,16 +5,25 @@
 
     <parent>
         <groupId>com.mdyaipay</groupId>
-        <artifactId>mdyaipay-tools</artifactId>
+        <artifactId>mdyaipay-tools-ratelimit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdyaipay-tools-trace-core</artifactId>
-    <name>mdyaipay-tools-trace-core</name>
-    <description>分布式 Trace 上下文与 W3C/sw8 传播（仅 JDK，无 Spring）</description>
+    <artifactId>mdyaipay-tools-ratelimit-redis</artifactId>
+    <name>mdyaipay-tools-ratelimit-redis</name>
+    <description>Redis 限流驱动：Lettuce + Lua（固定窗口、滑动窗口计数、令牌桶）</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

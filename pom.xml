@@ -74,7 +74,7 @@
             </dependency>
             <dependency>
                 <groupId>com.mdyaipay</groupId>
-                <artifactId>mdyaipay-tools-common</artifactId>
+                <artifactId>mdyaipay-tools-common-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -89,7 +89,7 @@
             </dependency>
             <dependency>
                 <groupId>com.mdyaipay</groupId>
-                <artifactId>mdyaipay-tools-timetrace</artifactId>
+                <artifactId>mdyaipay-tools-timetrace-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -130,6 +130,21 @@
             <dependency>
                 <groupId>com.mdyaipay</groupId>
                 <artifactId>mdyaipay-tools-loadtest-cli</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-ratelimit-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-ratelimit-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-ratelimit-spring-boot</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

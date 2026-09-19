@@ -10,12 +10,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdyaipay-tools-timetrace</artifactId>
+    <artifactId>mdyaipay-tools-trace</artifactId>
     <packaging>pom</packaging>
-    <name>mdyaipay-tools-timetrace</name>
-    <description>方法耗时追踪聚合：Spring AOP @TimeTrace 与自动配置</description>
+    <name>mdyaipay-tools-trace</name>
+    <description>分布式 Trace 聚合：core（JDK 传播）与 spring-boot（Filter/MDC 自动配置）</description>
 
     <modules>
-        <module>mdyaipay-tools-timetrace-core</module>
+        <module>mdyaipay-tools-trace-core</module>
+        <module>mdyaipay-tools-trace-spring-boot</module>
     </modules>
 </project>

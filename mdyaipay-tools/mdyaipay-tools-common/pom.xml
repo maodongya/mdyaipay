@@ -11,31 +11,11 @@
     </parent>
 
     <artifactId>mdyaipay-tools-common</artifactId>
+    <packaging>pom</packaging>
     <name>mdyaipay-tools-common</name>
-    <description>公共基础：ID、金额、统一响应与业务异常，无领域编排</description>
+    <description>公共基础聚合：ID、金额、统一响应与错误码（无领域编排）</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.mdyaipay</groupId>
-            <artifactId>mdyaipay-tools-trace-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    <modules>
+        <module>mdyaipay-tools-common-core</module>
+    </modules>
 </project>

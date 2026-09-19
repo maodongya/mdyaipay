@@ -10,12 +10,12 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdyaipay-tools-timetrace</artifactId>
+    <artifactId>mdyaipay-tools-mybatis</artifactId>
     <packaging>pom</packaging>
-    <name>mdyaipay-tools-timetrace</name>
-    <description>方法耗时追踪聚合：Spring AOP @TimeTrace 与自动配置</description>
+    <name>mdyaipay-tools-mybatis</name>
+    <description>MyBatis 横切聚合：SQL 耗时拦截与 Spring Boot 自动配置</description>
 
     <modules>
-        <module>mdyaipay-tools-timetrace-core</module>
+        <module>mdyaipay-tools-mybatis-spring-boot</module>
     </modules>
 </project>

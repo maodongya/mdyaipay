@@ -7,8 +7,8 @@
 | 目录 | 说明 |
 |------|------|
 | `mdyaipay-tools` | 公共工具聚合（子模块见下） |
-| `mdyaipay-tools/mdyaipay-tools-common` | ID、金额、统一响应与错误码 |
-| `mdyaipay-tools/mdyaipay-tools-timetrace` | AspectJ `@TimeTrace` 方法耗时与调用链追踪 |
+| `mdyaipay-tools/mdyaipay-tools-common` | 公共基础聚合（子模块 `mdyaipay-tools-common-core`） |
+| `mdyaipay-tools/mdyaipay-tools-timetrace` | 方法耗时追踪聚合（子模块 `mdyaipay-tools-timetrace-core`） |
 | `mdyaipay-user` | 用户域 |
 | `mdyaipay-accounting` | 账务域 |
 | `mdyaipay-finance` | 财务域 |

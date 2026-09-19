@@ -6,12 +6,21 @@
 
 | 模块 | ArtifactId | 职责 |
 |------|--------------|------|
-| 公共（聚合） | `mdyaipay-tools` | Maven 聚合：common、timetrace、trace-core、loadtest 等 |
-| 公共 | `mdyaipay-tools-common` | 雪花 ID、金额分/元工具、统一 API 响应与错误码（无业务编排） |
-| 公共 | `mdyaipay-tools-timetrace` | Spring AOP `@TimeTrace`：入口方法耗时与慢调用报告（无业务编排） |
-| 公共 | `mdyaipay-tools-trace-core` | 分布式 Trace 上下文与 W3C/sw8 传播（仅 JDK，无 Spring） |
+| 公共（聚合） | `mdyaipay-tools` | Maven 聚合：common、timetrace、trace、mybatis、loadtest 等 |
+| 公共（聚合） | `mdyaipay-tools-common` | 公共基础聚合（`packaging=pom`） |
+| 公共 | `mdyaipay-tools-common-core` | 雪花 ID、金额分/元工具、统一 API 响应与错误码（无业务编排） |
+| 公共（聚合） | `mdyaipay-tools-timetrace` | 方法耗时追踪聚合 |
+| 公共 | `mdyaipay-tools-timetrace-core` | Spring AOP `@TimeTrace`：入口方法耗时与慢调用报告（无业务编排） |
+| 公共（聚合） | `mdyaipay-tools-trace` | 分布式 Trace 聚合 |
+| 公共 | `mdyaipay-tools-trace-core` | Trace 上下文与 W3C/sw8 传播（仅 JDK，无 Spring） |
 | 公共 | `mdyaipay-tools-trace-spring-boot` | Trace 自动配置：Servlet/Gateway/Dubbo Filter、MDC、出站 HTTP 头 |
+| 公共（聚合） | `mdyaipay-tools-mybatis` | MyBatis 横切聚合 |
+| 公共 | `mdyaipay-tools-mybatis-spring-boot` | SQL 耗时拦截与 Spring Boot 自动配置 |
 | 公共（聚合） | `mdyaipay-tools-loadtest` | 压测工具聚合：core + HTTP/Dubbo/Spring Cloud 驱动 + CLI |
+| 公共（聚合） | `mdyaipay-tools-ratelimit` | 限流工具聚合：core + redis + spring-boot |
+| 公共 | `mdyaipay-tools-ratelimit-core` | 限流契约、策略模型、内存算法与键解析 SPI |
+| 公共 | `mdyaipay-tools-ratelimit-redis` | Redis + Lua 分布式限流驱动 |
+| 公共 | `mdyaipay-tools-ratelimit-spring-boot` | Gateway/Servlet 自动配置与 429 响应 |
 | 公共 | `mdyaipay-tools-loadtest-core` | 压测引擎、动态指标、报告模型 |
 | 公共 | `mdyaipay-tools-loadtest-http` | HTTP/HTTPS 压测驱动 |
 | 公共 | `mdyaipay-tools-loadtest-dubbo` | Dubbo 泛化调用压测驱动 |
@@ -28,7 +37,7 @@
 
 ## 依赖关系（规划）
 
-典型调用链：`gateway` → `cashier` → `payment`；支付成功后异步或同步触发 `accounting` 入账，日终/批次由 `finance` 对账结算。`mdyaipay-tools-common` / `mdyaipay-tools-timetrace` 为无上游业务依赖的公共库，其他模块按需引入。当前代码仅为骨架与支付示例实现，模块间 Maven 依赖可按演进逐步引入，避免过早耦合。
+典型调用链：`gateway` → `cashier` → `payment`；支付成功后异步或同步触发 `accounting` 入账，日终/批次由 `finance` 对账结算。`mdyaipay-tools-common-core` / `mdyaipay-tools-timetrace-core` 为无上游业务依赖的公共库，其他模块按需引入。当前代码仅为骨架与支付示例实现，模块间 Maven 依赖可按演进逐步引入，避免过早耦合。
 
 ## 构建
 

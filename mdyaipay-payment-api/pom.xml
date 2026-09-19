@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>com.mdyaipay</groupId>
-            <artifactId>mdyaipay-tools-common</artifactId>
+            <artifactId>mdyaipay-tools-common-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

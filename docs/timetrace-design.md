@@ -11,7 +11,7 @@
 
 ## 模块
 
-- Artifact：`mdyaipay-tools-timetrace`
+- Artifact：`mdyaipay-tools-timetrace-core`（聚合父工程 `mdyaipay-tools-timetrace`）
 - 包：`com.mdyaipay.tools.timetrace`
 - 依赖：`spring-aop`（AspectJ 注解风格，运行时由 Spring 代理织入）
 - 不依赖业务模块；业务模块按需引入本 artifact。
@@ -36,7 +36,7 @@
 ```xml
 <dependency>
     <groupId>com.mdyaipay</groupId>
-    <artifactId>mdyaipay-tools-timetrace</artifactId>
+    <artifactId>mdyaipay-tools-timetrace-core</artifactId>
 </dependency>
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -58,7 +58,7 @@ mdyaipay:
 
 Log4j2 落盘：Listener 写入 Logger `com.mdyaipay.tools.timetrace.report`。业务模块引入 `spring-boot-starter-log4j2`（排除默认 Logback），并配置 `log4j2-spring.xml` 将该 Logger 绑定文件 Appender。参考 `mdyaipay-payment`。
 
-修改 `mdyaipay-tools-timetrace` 后需 **`mvn -pl mdyaipay-tools/mdyaipay-tools-timetrace install`**（或从仓库根目录 `install`），再重启业务进程；否则 `spring-boot:run` 仍可能加载本地仓库中的旧 JAR，报告只会走 stdout，`logs/timetrace.log` 为空。
+修改 `mdyaipay-tools-timetrace-core` 后需 **`mvn -pl mdyaipay-tools/mdyaipay-tools-timetrace/mdyaipay-tools-timetrace-core install`**（或从仓库根目录 `install`），再重启业务进程；否则 `spring-boot:run` 仍可能加载本地仓库中的旧 JAR，报告只会走 stdout，`logs/timetrace.log` 为空。
 
 参考：`mdyaipay-payment`（仅依赖上述两个 artifact，无手写 Configuration）。
 
@@ -74,7 +74,7 @@ Log4j2 落盘：Listener 写入 Logger `com.mdyaipay.tools.timetrace.report`。�
 模块内 `TimeTraceAspectTest` 使用 `@ImportAutoConfiguration` 加载 `AopAutoConfiguration` 与 `TimeTraceAutoConfiguration`。
 
 ```bash
-mvn -pl mdyaipay-tools/mdyaipay-tools-timetrace test
+mvn -pl mdyaipay-tools/mdyaipay-tools-timetrace/mdyaipay-tools-timetrace-core test
 ```
 
 ## 使用示例

@@ -18,9 +18,9 @@
     <modules>
         <module>mdyaipay-tools-common</module>
         <module>mdyaipay-tools-timetrace</module>
-        <module>mdyaipay-tools-trace-core</module>
-        <module>mdyaipay-tools-trace-spring-boot</module>
-        <module>mdyaipay-tools-mybatis-spring-boot</module>
+        <module>mdyaipay-tools-trace</module>
+        <module>mdyaipay-tools-mybatis</module>
         <module>mdyaipay-tools-loadtest</module>
+        <module>mdyaipay-tools-ratelimit</module>
     </modules>
 </project>

@@ -5,28 +5,47 @@
 
     <parent>
         <groupId>com.mdyaipay</groupId>
-        <artifactId>mdyaipay-tools-loadtest</artifactId>
+        <artifactId>mdyaipay-tools-ratelimit</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdyaipay-tools-loadtest-http</artifactId>
-    <name>mdyaipay-tools-loadtest-http</name>
-    <description>HTTP/HTTPS 压测驱动（Java HttpClient）</description>
+    <artifactId>mdyaipay-tools-ratelimit-spring-boot</artifactId>
+    <name>mdyaipay-tools-ratelimit-spring-boot</name>
+    <description>限流 Spring Boot 自动配置：mdyaipay.ratelimit.*、Gateway GlobalFilter、可选 Servlet Filter</description>
 
     <dependencies>
         <dependency>
             <groupId>com.mdyaipay</groupId>
-            <artifactId>mdyaipay-tools-loadtest-core</artifactId>
-            <version>${project.version}</version>
+            <artifactId>mdyaipay-tools-ratelimit-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-redis</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
             <artifactId>mdyaipay-tools-common-core</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

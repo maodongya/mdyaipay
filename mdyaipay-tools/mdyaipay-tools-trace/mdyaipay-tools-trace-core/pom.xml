@@ -5,23 +5,20 @@
 
     <parent>
         <groupId>com.mdyaipay</groupId>
-        <artifactId>mdyaipay</artifactId>
+        <artifactId>mdyaipay-tools-trace</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdyaipay-user-api</artifactId>
-    <name>mdyaipay-user-api</name>
-    <description>用户域 Dubbo API：DTO、Facade 接口（无 Spring/MyBatis）</description>
+    <artifactId>mdyaipay-tools-trace-core</artifactId>
+    <name>mdyaipay-tools-trace-core</name>
+    <description>分布式 Trace 上下文与 W3C/sw8 传播（仅 JDK，无 Spring）</description>
 
     <dependencies>
         <dependency>
-            <groupId>com.mdyaipay</groupId>
-            <artifactId>mdyaipay-tools-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -30,6 +27,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

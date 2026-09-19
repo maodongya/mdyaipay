@@ -10,12 +10,14 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdyaipay-tools-timetrace</artifactId>
+    <artifactId>mdyaipay-tools-ratelimit</artifactId>
     <packaging>pom</packaging>
-    <name>mdyaipay-tools-timetrace</name>
-    <description>方法耗时追踪聚合：Spring AOP @TimeTrace 与自动配置</description>
+    <name>mdyaipay-tools-ratelimit</name>
+    <description>限流工具聚合：core（契约/内存算法）、redis（Lua 分布式）、spring-boot（Gateway/Servlet 自动配置）</description>
 
     <modules>
-        <module>mdyaipay-tools-timetrace-core</module>
+        <module>mdyaipay-tools-ratelimit-core</module>
+        <module>mdyaipay-tools-ratelimit-redis</module>
+        <module>mdyaipay-tools-ratelimit-spring-boot</module>
     </modules>
 </project>
