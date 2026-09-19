@@ -1,6 +1,7 @@
 package com.mdyaipay.tools.trace.autoconfigure;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.Ordered;
 
 /**
  * {@code mdyaipay.trace.*} 配置项。
@@ -48,6 +49,8 @@ public class TraceProperties {
         private boolean enabled = true;
         private String traceIdKey = "traceId";
         private String spanIdKey = "spanId";
+        private String serverDepthLevelKey = "serverDepthLevel";
+        private String spanLevelGlobalKey = "spanLevelGlobal";
 
         public boolean isEnabled() {
             return enabled;
@@ -72,15 +75,39 @@ public class TraceProperties {
         public void setSpanIdKey(String spanIdKey) {
             this.spanIdKey = spanIdKey;
         }
+
+        /** MDC 中全链服务深度键名（Gateway=1、Payment=2…）。 */
+        public String getServerDepthLevelKey() {
+            return serverDepthLevelKey;
+        }
+
+        public void setServerDepthLevelKey(String serverDepthLevelKey) {
+            this.serverDepthLevelKey = serverDepthLevelKey;
+        }
+
+        /** MDC 中全链 span 深度键名（跨方法/跨服务累计）。 */
+        public String getSpanLevelGlobalKey() {
+            return spanLevelGlobalKey;
+        }
+
+        public void setSpanLevelGlobalKey(String spanLevelGlobalKey) {
+            this.spanLevelGlobalKey = spanLevelGlobalKey;
+        }
     }
 
     /** HTTP 入口/出站相关配置。 */
     public static class Http {
 
-        private int gatewayFilterOrder = -1000;
+        /**
+         * Spring Cloud Gateway {@code GlobalFilter} 顺序：数值越小越先执行。
+         * 须早于会「截断链路、不调用 {@code chain.filter}」的业务 Filter（如 {@code HIGHEST_PRECEDENCE + 10}），
+         * 否则 Trace Filter 不会进入链、入口 {@code [TraceEntry]} 也不会在 {@code doFinally} 输出。
+         */
+        private int gatewayFilterOrder = Ordered.HIGHEST_PRECEDENCE;
         private boolean propagateResponseHeader = true;
         private boolean logEntryOnComplete = true;
 
+        /** Gateway Trace GlobalFilter 的 {@link Ordered#getOrder()} 值。 */
         public int getGatewayFilterOrder() {
             return gatewayFilterOrder;
         }

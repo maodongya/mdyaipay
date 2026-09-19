@@ -2,6 +2,16 @@ server:
   port: ${MDYAIPAY_GATEWAY_PORT:8041}
 
 mdyaipay:
+  trace:
+    http:
+      log-entry-on-complete: true
+      propagate-response-header: true
+    slice:
+      enabled: true
+      nested-spring-beans: false
+      log-on-complete: true
+    dubbo:
+      enabled: true
   gateway:
     user-base-url: ${USER_BASE_URL:http://127.0.0.1:8082}
     # 本地压测走 payment 内网 HTTP；生产留空并依赖 Dubbo
@@ -43,6 +53,9 @@ management:
         enabled: true
 
 logging:
+  file:
+    # 由 log4j2-spring.xml 写入；启动时勿再对该路径 shell 重定向（>>），否则每条日志会重复
+    name: logs/mdyaipay-gateway.log
   level:
     org.springframework.cloud.gateway: INFO
 

@@ -41,12 +41,14 @@ final class TraceSliceCompletionLog {
         String parent = slice.parentSpanId() == null ? "-" : slice.parentSpanId();
         String outcome = error == null ? "ok" : error.getClass().getSimpleName();
         LOG.info(
-                "[TraceSlice] signature={} traceId={} spanId={} parentSpanId={} spanLevel={} sampled={} durationMs={} outcome={}",
+                "[TraceSlice] signature={} traceId={} spanId={} parentSpanId={} spanLevel={} spanLevelGlobal={} serverDepthLevel={} sampled={} durationMs={} outcome={}",
                 joinPoint.getSignature().toShortString(),
                 slice.traceId(),
                 slice.spanId(),
                 parent,
                 slice.spanLevel(),
+                slice.spanLevelGlobal(),
+                slice.serverDepthLevel(),
                 slice.sampled(),
                 formatMillis(durationNanos),
                 outcome);

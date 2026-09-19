@@ -26,6 +26,8 @@ public final class TraceMdcSupport {
         }
         MDC.put(mdc.getTraceIdKey(), snapshot.traceId());
         MDC.put(mdc.getSpanIdKey(), snapshot.spanId());
+        MDC.put(mdc.getServerDepthLevelKey(), Integer.toString(snapshot.serverDepthLevel()));
+        MDC.put(mdc.getSpanLevelGlobalKey(), Integer.toString(snapshot.spanLevelGlobal()));
     }
 
     /** 清除本组件写入的 MDC 键。 */
@@ -35,6 +37,8 @@ public final class TraceMdcSupport {
         }
         MDC.remove(mdc.getTraceIdKey());
         MDC.remove(mdc.getSpanIdKey());
+        MDC.remove(mdc.getServerDepthLevelKey());
+        MDC.remove(mdc.getSpanLevelGlobalKey());
     }
 
     /**

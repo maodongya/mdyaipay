@@ -1,17 +1,17 @@
-# 网关加密收单约 5 万笔：40 并发 × 300s 正式阶段（预热 5s 不计入）；实际 TPS 以报告为准
-name: gateway-collect-50k
+# 网关加密收单约 500 笔：50 RPS × 10s 正式阶段（预热 2s 不计入报告）
+name: gateway-collect-500
 protocol: http
 load:
-  threads: 40
-  durationSeconds: 300
-  rampUpSeconds: 10
+  threads: 30
+  durationSeconds: 55
+  rampUpSeconds: 2
   thinkTimeMillis: 0
-  targetRps: null
+  targetRps: 50
 metrics:
-  percentiles: [0.5, 0.9, 0.95, 0.99]
-  warmupSeconds: 5
+  percentiles: [0.5, 0.9, 0.99]
+  warmupSeconds: 2
   recordErrors: true
-  maxErrorSamples: 50
+  maxErrorSamples: 30
 target:
   url: http://127.0.0.1:8041/api/v1/payments/collect
   method: POST
@@ -23,9 +23,9 @@ target:
     amount: 100
     channel: MOCK
     productType: QUICK_COLLECTION
-    orderNoPrefix: LT-50K-
+    orderNoPrefix: LT-500-
   timeoutMillis: 30000
   expectStatus: [200]
 report:
-  formats: [console, json, markdown]
+  formats: [console, json]
   outputDir: target/loadtest-reports

@@ -3,7 +3,7 @@
     <Properties>
         <Property name="TIMETRACE_LOG">${spring:mdyaipay.timetrace.log-file:-logs/timetrace.log}</Property>
         <Property name="APP_LOG">${spring:logging.file.name:-logs/mdyaipay-payment.log}</Property>
-        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId=%X{traceId} spanId=%X{spanId} - %msg%n</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId=%X{traceId} spanId=%X{spanId} spanLevelGlobal=%X{spanLevelGlobal} serverDepthLevel=%X{serverDepthLevel} - %msg%n</Property>
     </Properties>
 
     <Appenders>
@@ -37,8 +37,8 @@
                 additivity="false">
             <AppenderRef ref="TimeTraceFile"/>
         </Logger>
+        <!-- 仅写 AppFile：Root 若同时挂 Console，且启动脚本把 stdout 重定向到同一日志文件，会出现逐行双份 -->
         <Root level="info">
-            <AppenderRef ref="Console"/>
             <AppenderRef ref="AppFile"/>
         </Root>
     </Loggers>

@@ -25,6 +25,8 @@ class TraceSnapshotTest {
     void startNewUsesRootSpanLevel() {
         TraceSnapshot root = TraceSnapshot.startNew();
         assertEquals(1, root.spanLevel());
+        assertEquals(1, root.serverDepthLevel());
+        assertEquals(1, root.spanLevelGlobal());
         assertNull(root.parentSpanId());
     }
 
@@ -36,8 +38,11 @@ class TraceSnapshotTest {
         TraceSnapshot root = TraceSnapshot.startNew();
         TraceSnapshot child = root.childSpan();
         assertEquals(2, child.spanLevel());
+        assertEquals(2, child.spanLevelGlobal());
         assertEquals(root.spanId(), child.parentSpanId());
         assertEquals(root.traceId(), child.traceId());
+        assertEquals(1, root.serverDepthLevel());
+        assertEquals(1, child.serverDepthLevel());
     }
 
     /**
@@ -51,6 +56,9 @@ class TraceSnapshotTest {
         assertEquals(1, root.spanLevel());
         assertEquals(2, child.spanLevel());
         assertEquals(3, grandChild.spanLevel());
+        assertEquals(1, root.spanLevelGlobal());
+        assertEquals(2, child.spanLevelGlobal());
+        assertEquals(3, grandChild.spanLevelGlobal());
         assertEquals(child.spanId(), grandChild.parentSpanId());
     }
 
@@ -72,6 +80,7 @@ class TraceSnapshotTest {
     void ofWithoutParentUsesRootSpanLevel() {
         TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, null, true);
         assertEquals(1, snapshot.spanLevel());
+        assertEquals(1, snapshot.spanLevelGlobal());
         assertNull(snapshot.parentSpanId());
     }
 
@@ -82,6 +91,7 @@ class TraceSnapshotTest {
     void ofWithParentUsesLocalEntryRootLevel() {
         TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true);
         assertEquals(1, snapshot.spanLevel());
+        assertEquals(2, snapshot.spanLevelGlobal());
         assertEquals(PARENT_SPAN_ID, snapshot.parentSpanId());
     }
 
@@ -90,10 +100,12 @@ class TraceSnapshotTest {
      */
     @Test
     void ofExplicitSpanLevelPreservedByWithers() {
-        TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 4)
+        TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 4, 4, 7)
                 .withSw8("1-sw8")
                 .withBaggage(Map.of("k", "v"));
         assertEquals(4, snapshot.spanLevel());
+        assertEquals(4, snapshot.serverDepthLevel());
+        assertEquals(7, snapshot.spanLevelGlobal());
         assertEquals("1-sw8", snapshot.sw8());
         assertEquals("v", snapshot.baggage().get("k"));
     }
@@ -104,9 +116,9 @@ class TraceSnapshotTest {
     @Test
     void ofRejectsInconsistentSpanLevel() {
         assertThrows(IllegalArgumentException.class,
-                () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, null, true, 2));
+                () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, null, true, 2, 1, 1));
         assertThrows(IllegalArgumentException.class,
-                () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 0));
+                () -> TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 0, 2, 2));
     }
 
     /**
@@ -114,8 +126,20 @@ class TraceSnapshotTest {
      */
     @Test
     void ofWithParentAllowsRootLevelOneWhenExplicit() {
-        TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 1);
+        TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true, 1, 3, 5);
         assertEquals(1, snapshot.spanLevel());
+        assertEquals(3, snapshot.serverDepthLevel());
+        assertEquals(5, snapshot.spanLevelGlobal());
         assertEquals(PARENT_SPAN_ID, snapshot.parentSpanId());
+    }
+
+    /**
+     * 四参组装带 parent 时默认 serverDepthLevel=2（无 tracestate 时的续链默认）。
+     */
+    @Test
+    void ofWithParentDefaultsServerDepthTwo() {
+        TraceSnapshot snapshot = TraceSnapshot.of(TRACE_ID, SPAN_ID, PARENT_SPAN_ID, true);
+        assertEquals(2, snapshot.serverDepthLevel());
+        assertEquals(2, snapshot.spanLevelGlobal());
     }
 }

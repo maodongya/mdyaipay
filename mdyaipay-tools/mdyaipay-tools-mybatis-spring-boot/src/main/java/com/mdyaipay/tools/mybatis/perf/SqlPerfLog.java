@@ -43,12 +43,44 @@ public final class SqlPerfLog {
         String traceField = includeTraceId ? resolveTraceIdField() : "-";
         String outcome = error == null ? formatOutcome(result) : error.getClass().getSimpleName();
         LOG.info(
-                "[SqlPerf] statementId={} durationMs={} outcome={} traceId={} sql={}",
+                "[SqlPerf] statementId={} durationMs={} outcome={} traceId={} spanLevelGlobal={} serverDepthLevel={} sql={}",
                 mappedStatement.getId(),
                 formatMillis(durationMillis),
                 outcome,
                 traceField,
+                includeTraceId ? resolveSpanLevelGlobalField() : "-",
+                includeTraceId ? resolveServerDepthLevelField() : "-",
                 truncateSql(sql));
+    }
+
+    /** 尝试读取 trace-core 上下文中的 spanLevelGlobal；无依赖或未绑定时返回 {@code -}。 */
+    private static String resolveSpanLevelGlobalField() {
+        try {
+            Class<?> contextClass = Class.forName("com.mdyaipay.tools.trace.TraceContext");
+            Object optional = contextClass.getMethod("current").invoke(null);
+            if (optional instanceof java.util.Optional<?> opt && opt.isPresent()) {
+                Object snapshot = opt.get();
+                return String.valueOf(snapshot.getClass().getMethod("spanLevelGlobal").invoke(snapshot));
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // trace-core 未引入或未绑定
+        }
+        return "-";
+    }
+
+    /** 尝试读取 trace-core 上下文中的 serverDepthLevel；无依赖或未绑定时返回 {@code -}。 */
+    private static String resolveServerDepthLevelField() {
+        try {
+            Class<?> contextClass = Class.forName("com.mdyaipay.tools.trace.TraceContext");
+            Object optional = contextClass.getMethod("current").invoke(null);
+            if (optional instanceof java.util.Optional<?> opt && opt.isPresent()) {
+                Object snapshot = opt.get();
+                return String.valueOf(snapshot.getClass().getMethod("serverDepthLevel").invoke(snapshot));
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // trace-core 未引入或未绑定
+        }
+        return "-";
     }
 
     /** 尝试读取 trace-core 上下文中的 traceId；无依赖或未绑定时返回 {@code -}。 */

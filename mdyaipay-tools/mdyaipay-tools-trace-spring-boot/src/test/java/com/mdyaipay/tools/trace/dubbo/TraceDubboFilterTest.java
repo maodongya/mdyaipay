@@ -113,5 +113,7 @@ class TraceDubboFilterTest {
         assertEquals(upstream.spanId(), bound.parentSpanId());
         assertNotEquals(upstream.spanId(), bound.spanId());
         assertEquals(1, bound.spanLevel());
+        assertEquals(2, bound.serverDepthLevel());
+        assertEquals(2, bound.spanLevelGlobal());
     }
 }

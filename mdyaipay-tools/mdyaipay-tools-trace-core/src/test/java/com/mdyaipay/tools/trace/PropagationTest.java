@@ -30,6 +30,8 @@ class PropagationTest {
         assertNotEquals(root.spanId(), extracted.spanId());
         assertEquals(root.spanId(), extracted.parentSpanId());
         assertEquals(1, extracted.spanLevel());
+        assertEquals(2, extracted.serverDepthLevel());
+        assertEquals(2, extracted.spanLevelGlobal());
     }
 
     @Test
@@ -40,19 +42,47 @@ class PropagationTest {
 
         TraceSnapshot callee = Propagation.extract(outbound).orElseThrow();
         assertEquals(1, callee.spanLevel());
+        assertEquals(2, callee.serverDepthLevel());
+        assertEquals(2, callee.spanLevelGlobal());
         assertEquals(caller.spanId(), callee.parentSpanId());
     }
 
     @Test
-    void extractIgnoresForeignSpanLevelInTraceState() {
+    void extractUsesServerDepthFromTraceState() {
         TraceSnapshot root = TraceSnapshot.startNew();
         TextMapCarrier carrier = TextMapCarrier.create();
         carrier.set(TraceHeaders.TRACE_PARENT, root.toTraceParentHeader());
-        carrier.set(TraceHeaders.TRACE_STATE, TraceBaggageKeys.SPAN_LEVEL + "=5");
+        carrier.set(TraceHeaders.TRACE_STATE, TraceBaggageKeys.SERVER_DEPTH_LEVEL + "=3");
 
         TraceSnapshot extracted = Propagation.extract(carrier).orElseThrow();
         assertEquals(1, extracted.spanLevel());
+        assertEquals(3, extracted.serverDepthLevel());
         assertEquals(root.spanId(), extracted.parentSpanId());
+    }
+
+    @Test
+    void extractUsesSpanLevelGlobalFromTraceState() {
+        TraceSnapshot root = TraceSnapshot.startNew();
+        TextMapCarrier carrier = TextMapCarrier.create();
+        carrier.set(TraceHeaders.TRACE_PARENT, root.toTraceParentHeader());
+        carrier.set(TraceHeaders.TRACE_STATE, TraceBaggageKeys.SPAN_LEVEL_GLOBAL + "=5");
+
+        TraceSnapshot extracted = Propagation.extract(carrier).orElseThrow();
+        assertEquals(1, extracted.spanLevel());
+        assertEquals(5, extracted.spanLevelGlobal());
+    }
+
+    @Test
+    void injectIncrementsGlobalWhenCallerHadChildSpan() {
+        TraceSnapshot root = TraceSnapshot.startNew().childSpan().childSpan();
+        assertEquals(3, root.spanLevelGlobal());
+
+        TextMapCarrier outbound = TextMapCarrier.create();
+        Propagation.inject(outbound, root);
+
+        TraceSnapshot callee = Propagation.extract(outbound).orElseThrow();
+        assertEquals(1, callee.spanLevel());
+        assertEquals(4, callee.spanLevelGlobal());
     }
 
     @Test

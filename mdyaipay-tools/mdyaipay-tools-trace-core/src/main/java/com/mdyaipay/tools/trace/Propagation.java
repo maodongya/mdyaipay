@@ -1,6 +1,6 @@
 package com.mdyaipay.tools.trace;
 
-import com.mdyaipay.tools.trace.internal.SpanLevelPropagation;
+import com.mdyaipay.tools.trace.internal.ServerDepthPropagation;
 import com.mdyaipay.tools.trace.internal.Sw8Fallback;
 import com.mdyaipay.tools.trace.internal.TraceStateCodec;
 
@@ -38,8 +38,11 @@ public final class Propagation {
         Objects.requireNonNull(carrier, "carrier");
         Objects.requireNonNull(snapshot, "snapshot");
         carrier.set(TraceHeaders.TRACE_PARENT, snapshot.toTraceParentHeader());
-        String traceState = TraceStateCodec.encode(SpanLevelPropagation.forTraceStateEncode(
-                snapshot.baggage(), TraceSnapshot.ROOT_SPAN_LEVEL));
+        int downstreamDepth = ServerDepthPropagation.downstreamServerDepth(snapshot.serverDepthLevel());
+        int downstreamGlobal = ServerDepthPropagation.downstreamSpanLevelGlobal(snapshot.spanLevelGlobal());
+        String traceState = TraceStateCodec.encode(
+                ServerDepthPropagation.forTraceStateEncode(
+                        snapshot.baggage(), downstreamDepth, downstreamGlobal));
         if (traceState != null) {
             carrier.set(TraceHeaders.TRACE_STATE, traceState);
         }
@@ -89,16 +92,22 @@ public final class Propagation {
     }
 
     /**
-     * 续链入口：本服务第一个节点恒为根 {@link TraceSnapshot#ROOT_SPAN_LEVEL}；仅保留 traceId/父 span，剥离 tracestate 中的 spanLevel。
+     * 续链入口：本服务 spanLevel=1；全链深度来自 tracestate；剥离框架保留键。
      */
     private static TraceSnapshot applyContinuedEntryRoot(TraceSnapshot continued) {
-        Map<String, String> businessBaggage = SpanLevelPropagation.withoutSpanLevel(continued.baggage());
+        int serverDepth = ServerDepthPropagation.readEntryServerDepth(continued.baggage())
+                .orElse(TraceSnapshot.defaultContinuedServerDepthLevel());
+        int spanLevelGlobal = ServerDepthPropagation.readEntrySpanLevelGlobal(continued.baggage())
+                .orElse(TraceSnapshot.defaultContinuedSpanLevelGlobal());
+        Map<String, String> businessBaggage = ServerDepthPropagation.withoutFrameworkKeys(continued.baggage());
         TraceSnapshot rooted = TraceSnapshot.of(
                 continued.traceId(),
                 continued.spanId(),
                 continued.parentSpanId(),
                 continued.sampled(),
-                TraceSnapshot.ROOT_SPAN_LEVEL);
+                TraceSnapshot.ROOT_SPAN_LEVEL,
+                serverDepth,
+                spanLevelGlobal);
         if (continued.sw8() != null) {
             rooted = rooted.withSw8(continued.sw8());
         }

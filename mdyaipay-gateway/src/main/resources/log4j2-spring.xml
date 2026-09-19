@@ -2,7 +2,7 @@
 <!-- 统一 Log4j2：仅 Console + 单文件 RollingFile，勿对 logging.file.name 再 shell 重定向同一文件 -->
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
-        <Property name="APP_LOG">${spring:logging.file.name:-logs/mdyaipay-user.log}</Property>
+        <Property name="APP_LOG">${spring:logging.file.name:-logs/mdyaipay-gateway.log}</Property>
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId=%X{traceId} spanId=%X{spanId} spanLevelGlobal=%X{spanLevelGlobal} serverDepthLevel=%X{serverDepthLevel} - %msg%n</Property>
     </Properties>
 

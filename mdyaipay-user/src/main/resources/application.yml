@@ -29,6 +29,14 @@ user:
     merchant-topic: MDYAIPAY_USER_MERCHANT
 
 mdyaipay:
+  trace:
+    http:
+      log-entry-on-complete: true
+    slice:
+      enabled: true
+      log-on-complete: true
+    dubbo:
+      enabled: true
   mybatis:
     sql-perf:
       enabled: true
