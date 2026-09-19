@@ -1,0 +1,106 @@
+# 本地 Docker：user / payment / gateway
+# 复用已运行的 mysql8、zk1（外部网络 mysql_default、zookeeper_zk-net）
+# 启动：scripts/run-mdyaipay-docker.sh
+name: mdyaipay
+
+services:
+  mdyaipay-user:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_JAR: jars/user.jar
+    image: mdyaipay-user:local
+    container_name: mdyaipay-user
+    ports:
+      - "8082:8082"
+      - "20882:20882"
+    environment:
+      USER_SERVER_PORT: "8082"
+      USER_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      USER_JDBC_USER: root
+      USER_JDBC_PASSWORD: "123456"
+      USER_MQ_ENABLED: "false"
+      DUBBO_PORT: "20882"
+      DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+      DUBBO_IP_TO_REGISTRY: mdyaipay-user
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+    networks:
+      - default
+      - mysql
+      - zk
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8082/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  mdyaipay-payment:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_JAR: jars/payment.jar
+    image: mdyaipay-payment:local
+    container_name: mdyaipay-payment
+    ports:
+      - "8081:8081"
+      - "20881:20881"
+    environment:
+      PAYMENT_SERVER_PORT: "8081"
+      PAYMENT_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      PAYMENT_JDBC_USER: root
+      PAYMENT_JDBC_PASSWORD: "123456"
+      DUBBO_PORT: "20881"
+      DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+      DUBBO_IP_TO_REGISTRY: mdyaipay-payment
+      DUBBO_PROTOCOL_HOST: mdyaipay-payment
+    networks:
+      - default
+      - mysql
+      - zk
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8081/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  mdyaipay-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_JAR: jars/gateway.jar
+    image: mdyaipay-gateway:local
+    container_name: mdyaipay-gateway
+    ports:
+      - "8041:8041"
+    environment:
+      MDYAIPAY_GATEWAY_PORT: "8041"
+      USER_BASE_URL: http://mdyaipay-user:8082
+      PAYMENT_BASE_URL: http://mdyaipay-payment:8081
+      DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    depends_on:
+      mdyaipay-user:
+        condition: service_healthy
+      mdyaipay-payment:
+        condition: service_healthy
+    networks:
+      - default
+      - zk
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8041/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+
+networks:
+  mysql:
+    external: true
+    name: mysql_default
+  zk:
+    external: true
+    name: zookeeper_zk-net
