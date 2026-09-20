@@ -1,0 +1,3 @@
+com.mdyaipay.tools.sentinel.autoconfigure.SentinelAutoConfiguration
+com.mdyaipay.tools.sentinel.autoconfigure.SentinelGatewayAutoConfiguration
+com.mdyaipay.tools.sentinel.autoconfigure.SentinelDubboAutoConfiguration

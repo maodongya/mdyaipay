@@ -49,8 +49,21 @@ public final class RateLimitPolicyFactory {
             throw new IllegalStateException("rate limit window is required");
         }
         double refillRate = refill == null ? 0.0d : refill;
-        int slidingSegments = segments == null ? 0 : segments;
+        int slidingSegments = resolveSlidingSegments(algorithm, segments);
         return new RateLimitPolicy(algorithm, limit, window, refillRate, slidingSegments);
+    }
+
+    /**
+     * 滑动窗口未配置分段时默认 5（与设计文档一致）；其它算法为 0。
+     */
+    private static int resolveSlidingSegments(RateLimitAlgorithm algorithm, Integer segments) {
+        if (segments != null) {
+            return segments;
+        }
+        if (algorithm == RateLimitAlgorithm.SLIDING_WINDOW_COUNTER) {
+            return 5;
+        }
+        return 0;
     }
 
     private static <T> T firstNonNull(T first, T second) {

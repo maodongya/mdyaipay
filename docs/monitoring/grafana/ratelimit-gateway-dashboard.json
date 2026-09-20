@@ -54,7 +54,7 @@
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
       "id": 1,
-      "title": "入口 HTTP QPS（按 status，关注 200 / 429 / 503）",
+      "title": "HTTP QPS（按 status；user/payment 多为 actuator，Facade 流量看下方面板）",
       "type": "timeseries",
       "targets": [
         {
@@ -142,7 +142,7 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["mdyaipay", "ratelimit", "gateway"],
+  "tags": ["mdyaipay", "ratelimit", "gateway", "user", "payment"],
   "templating": {
     "list": [
       {
@@ -153,21 +153,31 @@
       },
       {
         "name": "job",
-        "type": "constant",
-        "query": "mdyaipay-gateway",
+        "type": "custom",
+        "query": "mdyaipay-gateway,mdyaipay-user,mdyaipay-payment",
+        "options": [
+          { "text": "mdyaipay-gateway", "value": "mdyaipay-gateway", "selected": true },
+          { "text": "mdyaipay-user", "value": "mdyaipay-user", "selected": false },
+          { "text": "mdyaipay-payment", "value": "mdyaipay-payment", "selected": false }
+        ],
         "current": { "text": "mdyaipay-gateway", "value": "mdyaipay-gateway" }
       },
       {
         "name": "application",
-        "type": "constant",
-        "query": "mdyaipay-gateway",
+        "type": "custom",
+        "query": "mdyaipay-gateway,mdyaipay-user,mdyaipay-payment",
+        "options": [
+          { "text": "mdyaipay-gateway", "value": "mdyaipay-gateway", "selected": true },
+          { "text": "mdyaipay-user", "value": "mdyaipay-user", "selected": false },
+          { "text": "mdyaipay-payment", "value": "mdyaipay-payment", "selected": false }
+        ],
         "current": { "text": "mdyaipay-gateway", "value": "mdyaipay-gateway" }
       }
     ]
   },
   "time": { "from": "now-15m", "to": "now" },
   "timezone": "browser",
-  "title": "mdyaipay Gateway 限流与入口",
+  "title": "mdyaipay 限流与服务流量",
   "uid": "mdyaipay-ratelimit-gateway",
   "version": 2
 }

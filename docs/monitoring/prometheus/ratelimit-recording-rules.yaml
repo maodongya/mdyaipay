@@ -58,3 +58,49 @@ groups:
               or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway",outcome=~"allowed|denied|backend_error"}[5m]))
             ),
             1e-9)
+
+  - name: mdyaipay_ratelimit_user
+    interval: 30s
+    rules:
+      - record: mdyaipay:user:http_requests:rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="mdyaipay-user"}[5m]))
+          or sum(rate(http_server_requests_seconds_count{job="mdyaipay-user"}[5m]))
+
+      - record: mdyaipay:user:ratelimit:decisions:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-user"}[5m])) by (rule_id, outcome)
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-user"}[5m])) by (rule_id, outcome)
+
+      - record: mdyaipay:user:ratelimit:denied:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-user",outcome="denied"}[5m])) by (rule_id)
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-user",outcome="denied"}[5m])) by (rule_id)
+
+      - record: mdyaipay:user:ratelimit:backend_error:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-user",outcome="backend_error"}[5m]))
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-user",outcome="backend_error"}[5m]))
+
+  - name: mdyaipay_ratelimit_payment
+    interval: 30s
+    rules:
+      - record: mdyaipay:payment:http_requests:rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="mdyaipay-payment"}[5m]))
+          or sum(rate(http_server_requests_seconds_count{job="mdyaipay-payment"}[5m]))
+
+      - record: mdyaipay:payment:ratelimit:decisions:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-payment"}[5m])) by (rule_id, outcome)
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-payment"}[5m])) by (rule_id, outcome)
+
+      - record: mdyaipay:payment:ratelimit:denied:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-payment",outcome="denied"}[5m])) by (rule_id)
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-payment",outcome="denied"}[5m])) by (rule_id)
+
+      - record: mdyaipay:payment:ratelimit:backend_error:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-payment",outcome="backend_error"}[5m]))
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-payment",outcome="backend_error"}[5m]))

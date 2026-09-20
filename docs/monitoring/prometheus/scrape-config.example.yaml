@@ -1,0 +1,25 @@
+# Prometheus scrape 示例：gateway / user / payment 限流与流量（挂载到 prometheus.yml 的 scrape_configs）
+scrape_configs:
+  - job_name: mdyaipay-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8041']
+        labels:
+          env: dev
+          application: mdyaipay-gateway
+
+  - job_name: mdyaipay-user
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8082']
+        labels:
+          env: dev
+          application: mdyaipay-user
+
+  - job_name: mdyaipay-payment
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+        labels:
+          env: dev
+          application: mdyaipay-payment

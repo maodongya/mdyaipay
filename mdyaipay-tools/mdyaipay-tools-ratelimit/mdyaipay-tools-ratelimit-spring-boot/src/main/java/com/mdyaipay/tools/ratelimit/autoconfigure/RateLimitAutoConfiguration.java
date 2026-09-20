@@ -13,7 +13,6 @@ import com.mdyaipay.tools.ratelimit.resolve.PathKeyResolver;
 import com.mdyaipay.tools.ratelimit.resolve.RouteIdKeyResolver;
 import com.mdyaipay.tools.ratelimit.dubbo.RateLimitDubboConsumerFilter;
 import com.mdyaipay.tools.ratelimit.dubbo.RateLimitDubboProviderFilter;
-import com.mdyaipay.tools.ratelimit.gateway.RateLimitGatewayFilter;
 import com.mdyaipay.tools.ratelimit.observe.RateLimitMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
@@ -22,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import java.util.LinkedHashMap;
@@ -111,16 +111,25 @@ public class RateLimitAutoConfiguration {
     }
 
     /**
+     * 集群 limit 动态刷新（Sentinel Dashboard {@code cluster:} 规则）。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    RateLimitClusterPolicyRefresher rateLimitClusterPolicyRefresher(RateLimitProperties properties) {
+        return new RateLimitClusterPolicyRefresher(properties);
+    }
+
+    /**
      * 启动校验：backend 与驱动 jar 不一致时 fail-fast，避免限流静默失效。
      */
     @Bean
     RateLimitStartupValidator rateLimitStartupValidator(
             RateLimitProperties properties,
+            ConfigurableApplicationContext applicationContext,
             ObjectProvider<RateLimiter> rateLimiter,
-            ObjectProvider<RateLimitGatewayFilter> gatewayFilter,
             ObjectProvider<RateLimitDubboProviderFilter> dubboProviderFilter,
             ObjectProvider<RateLimitDubboConsumerFilter> dubboConsumerFilter) {
         return new RateLimitStartupValidator(
-                properties, rateLimiter, gatewayFilter, dubboProviderFilter, dubboConsumerFilter);
+                properties, applicationContext, rateLimiter, dubboProviderFilter, dubboConsumerFilter);
     }
 }

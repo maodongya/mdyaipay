@@ -22,5 +22,6 @@
         <module>mdyaipay-tools-mybatis</module>
         <module>mdyaipay-tools-loadtest</module>
         <module>mdyaipay-tools-ratelimit</module>
+        <module>mdyaipay-tools-sentinel</module>
     </modules>
 </project>

@@ -1,0 +1,16 @@
+enabled: true
+backend: redisson
+default-policy:
+  algorithm: SLIDING_WINDOW_COUNTER
+  limit: 20
+  window: 1s
+rules:
+  - id: user-merchant-gateway-facade-provider
+    match:
+      dubbo-side: provider
+      dubbo-service: com.mdyaipay.user.api.merchant.gateway.MerchantGatewayFacade
+    policy:
+      algorithm: SLIDING_WINDOW_COUNTER
+      limit: 20
+      window: 1s
+    key-resolvers: [dubboService]

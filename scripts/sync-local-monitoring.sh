@@ -10,6 +10,7 @@ if [[ ! -d "$MON" ]]; then
 fi
 cp "$MDY/prometheus/ratelimit-recording-rules.yaml" "$MON/prometheus/mdyaipay-ratelimit-recording-rules.yaml"
 cp "$MDY/prometheus/ratelimit-alerts.yaml" "$MON/prometheus/mdyaipay-ratelimit-alerts.yaml"
+cp "$MDY/prometheus/scrape-config.example.yaml" "$MON/prometheus/mdyaipay-scrape-config.example.yaml"
 cp "$MDY/grafana/ratelimit-gateway-dashboard.json" "$MON/grafana/dashboards/mdyaipay-ratelimit-gateway.json"
 docker compose -f "$MON/docker-compose.yml" up -d prometheus grafana
 curl -sf -X POST http://127.0.0.1:9090/-/reload >/dev/null

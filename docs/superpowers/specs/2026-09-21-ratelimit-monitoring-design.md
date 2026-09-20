@@ -10,7 +10,7 @@
 | 单类 `RateLimitMetrics` + 1 Counter（`outcome` 标签区分 denied/allowed/…） | SPI `RateLimitObservation`、Context record、Outcome 枚举 |
 | 可选 Timer `acquire` | 独立 `denied`/`fail_open`/`backend.errors` Counter |
 | 拒绝 / 后端异常 WARN 日志 | 全量 access 日志、按商户 label |
-| Gateway `actuator/prometheus` + 启动校验 | Grafana/Alertmanager 运维模板见 P3 |
+| Gateway / user / payment `actuator/prometheus` + 启动校验 | Grafana/Alertmanager 运维模板见 P3 |
 | **P2** Servlet 埋点、SkyWalking Tag、loadtest status 分布 | 见 [`docs/monitoring/ratelimit-p2.md`](../../monitoring/ratelimit-p2.md) |
 
 详见 [`docs/monitoring/ratelimit-p1-prometheus.md`](../../monitoring/ratelimit-p1-prometheus.md)。

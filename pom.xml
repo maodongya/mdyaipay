@@ -34,6 +34,8 @@
         <dubbo.version>3.3.2</dubbo.version>
         <rocketmq-spring.version>2.3.1</rocketmq-spring.version>
         <redisson.version>3.40.2</redisson.version>
+        <sentinel.version>1.8.8</sentinel.version>
+        <nacos-client.version>2.4.3</nacos-client.version>
     </properties>
 
     <dependencyManagement>
@@ -157,6 +159,41 @@
                 <groupId>com.mdyaipay</groupId>
                 <artifactId>mdyaipay-tools-ratelimit-spring-boot</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-sentinel-spring-boot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-core</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-transport-simple-http</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-reactor-adapter</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-apache-dubbo3-adapter</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-ratelimit-nacos</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
+                <artifactId>nacos-client</artifactId>
+                <version>${nacos-client.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mdyaipay</groupId>

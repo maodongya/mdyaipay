@@ -1,99 +1,221 @@
-# 本地 Docker：user / payment / gateway
-# 复用已运行的 mysql8、zk1（外部网络 mysql_default、zookeeper_zk-net）
+# 本地 Docker：user / payment / gateway 各 2 节点（复用 mysql8、zk1、本机 Redis 如 redis7:6379）
+# 限流 Redisson 默认连 host.docker.internal:6379（容器内 127.0.0.1 无 Redis 会启动失败）
+# 每容器内存上限 512M（memswap 同限，避免撑 swap）；JVM 见 Dockerfile MaxRAMPercentage
 # 启动：scripts/run-mdyaipay-docker.sh
 name: mdyaipay
 
+x-user-image: &user-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      APP_JAR: jars/user.jar
+  image: mdyaipay-user:local
+
+x-user-base: &user-base
+  <<: *user-image
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  mem_limit: 512m
+  memswap_limit: 512m
+  environment: &user-env-base
+    MDYAIPAY_RATELIMIT_REDIS_URI: ${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://host.docker.internal:6379}
+    USER_SERVER_PORT: "8082"
+    USER_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    USER_JDBC_USER: root
+    USER_JDBC_PASSWORD: "123456"
+    USER_MQ_ENABLED: "false"
+    DUBBO_PORT: "20882"
+    DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    SPRING_AUTOCONFIGURE_EXCLUDE: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+    MDYAIPAY_SENTINEL_DASHBOARD: sentinel-dashboard:8858
+  networks:
+    - default
+    - mysql
+    - zk
+  healthcheck:
+    test: ["CMD", "curl", "-sf", "http://127.0.0.1:8082/actuator/health"]
+    interval: 5s
+    timeout: 5s
+    retries: 30
+    start_period: 40s
+
+x-payment-image: &payment-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      APP_JAR: jars/payment.jar
+  image: mdyaipay-payment:local
+
+x-payment-base: &payment-base
+  <<: *payment-image
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  mem_limit: 512m
+  memswap_limit: 512m
+  environment: &payment-env-base
+    MDYAIPAY_RATELIMIT_REDIS_URI: ${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://host.docker.internal:6379}
+    PAYMENT_SERVER_PORT: "8081"
+    PAYMENT_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    PAYMENT_JDBC_USER: root
+    PAYMENT_JDBC_PASSWORD: "123456"
+    DUBBO_PORT: "20881"
+    DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    MDYAIPAY_SENTINEL_DASHBOARD: sentinel-dashboard:8858
+  networks:
+    - default
+    - mysql
+    - zk
+  healthcheck:
+    test: ["CMD", "curl", "-sf", "http://127.0.0.1:8081/actuator/health"]
+    interval: 5s
+    timeout: 5s
+    retries: 30
+    start_period: 40s
+
+x-gateway-image: &gateway-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      APP_JAR: jars/gateway.jar
+  image: mdyaipay-gateway:local
+
+x-gateway-base: &gateway-base
+  <<: *gateway-image
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  mem_limit: 512m
+  memswap_limit: 512m
+  environment: &gateway-env-base
+    MDYAIPAY_RATELIMIT_REDIS_URI: ${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://host.docker.internal:6379}
+    MDYAIPAY_GATEWAY_PORT: "8041"
+    DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    MDYAIPAY_SENTINEL_DASHBOARD: sentinel-dashboard:8858
+  networks:
+    - default
+    - zk
+  healthcheck:
+    test: ["CMD", "curl", "-sf", "http://127.0.0.1:8041/actuator/health"]
+    interval: 5s
+    timeout: 5s
+    retries: 24
+    start_period: 30s
+
 services:
-  mdyaipay-user:
+  sentinel-dashboard:
     build:
-      context: .
+      context: ../sentinel
       dockerfile: Dockerfile
-      args:
-        APP_JAR: jars/user.jar
-    image: mdyaipay-user:local
-    container_name: mdyaipay-user
+    image: mdyaipay-sentinel-dashboard:local
+    container_name: mdyaipay-sentinel-dashboard
+    mem_limit: 512m
+    memswap_limit: 512m
+    ports:
+      - "8858:8858"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8858/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  mdyaipay-user-1:
+    <<: *user-base
+    container_name: mdyaipay-user-1
+    hostname: mdyaipay-user-1
     ports:
       - "8082:8082"
       - "20882:20882"
     environment:
-      USER_SERVER_PORT: "8082"
-      USER_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
-      USER_JDBC_USER: root
-      USER_JDBC_PASSWORD: "123456"
-      USER_MQ_ENABLED: "false"
-      DUBBO_PORT: "20882"
-      DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
-      DUBBO_IP_TO_REGISTRY: mdyaipay-user
-      SPRING_AUTOCONFIGURE_EXCLUDE: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
-    networks:
-      - default
-      - mysql
-      - zk
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8082/actuator/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 40s
+      <<: *user-env-base
+      USER_ID_WORKER_ID: "3"
+      DUBBO_IP_TO_REGISTRY: mdyaipay-user-1
+      MDYAIPAY_SENTINEL_TRANSPORT_PORT: "8721"
 
-  mdyaipay-payment:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_JAR: jars/payment.jar
-    image: mdyaipay-payment:local
-    container_name: mdyaipay-payment
+  mdyaipay-user-2:
+    <<: *user-base
+    container_name: mdyaipay-user-2
+    hostname: mdyaipay-user-2
+    ports:
+      - "8083:8082"
+      - "20883:20882"
+    environment:
+      <<: *user-env-base
+      USER_ID_WORKER_ID: "4"
+      DUBBO_IP_TO_REGISTRY: mdyaipay-user-2
+      MDYAIPAY_SENTINEL_TRANSPORT_PORT: "8722"
+
+  mdyaipay-payment-1:
+    <<: *payment-base
+    container_name: mdyaipay-payment-1
+    hostname: mdyaipay-payment-1
     ports:
       - "8081:8081"
       - "20881:20881"
     environment:
-      PAYMENT_SERVER_PORT: "8081"
-      PAYMENT_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
-      PAYMENT_JDBC_USER: root
-      PAYMENT_JDBC_PASSWORD: "123456"
-      DUBBO_PORT: "20881"
-      DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
-      DUBBO_IP_TO_REGISTRY: mdyaipay-payment
-      DUBBO_PROTOCOL_HOST: mdyaipay-payment
-    networks:
-      - default
-      - mysql
-      - zk
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8081/actuator/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 40s
+      <<: *payment-env-base
+      PAYMENT_ID_WORKER_ID: "2"
+      DUBBO_IP_TO_REGISTRY: mdyaipay-payment-1
+      DUBBO_PROTOCOL_HOST: mdyaipay-payment-1
+      MDYAIPAY_SENTINEL_TRANSPORT_PORT: "8723"
 
-  mdyaipay-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_JAR: jars/gateway.jar
-    image: mdyaipay-gateway:local
-    container_name: mdyaipay-gateway
+  mdyaipay-payment-2:
+    <<: *payment-base
+    container_name: mdyaipay-payment-2
+    hostname: mdyaipay-payment-2
+    ports:
+      - "8084:8081"
+      - "20884:20881"
+    environment:
+      <<: *payment-env-base
+      PAYMENT_ID_WORKER_ID: "5"
+      DUBBO_IP_TO_REGISTRY: mdyaipay-payment-2
+      DUBBO_PROTOCOL_HOST: mdyaipay-payment-2
+      MDYAIPAY_SENTINEL_TRANSPORT_PORT: "8724"
+
+  mdyaipay-gateway-1:
+    <<: *gateway-base
+    container_name: mdyaipay-gateway-1
+    hostname: mdyaipay-gateway-1
     ports:
       - "8041:8041"
     environment:
-      MDYAIPAY_GATEWAY_PORT: "8041"
-      DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+      <<: *gateway-env-base
+      MDYAIPAY_SENTINEL_TRANSPORT_PORT: "8719"
     depends_on:
-      mdyaipay-user:
+      sentinel-dashboard:
         condition: service_healthy
-      mdyaipay-payment:
+      mdyaipay-user-1:
         condition: service_healthy
-    networks:
-      - default
-      - zk
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8041/actuator/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 24
-      start_period: 30s
+      mdyaipay-user-2:
+        condition: service_healthy
+      mdyaipay-payment-1:
+        condition: service_healthy
+      mdyaipay-payment-2:
+        condition: service_healthy
+
+  mdyaipay-gateway-2:
+    <<: *gateway-base
+    container_name: mdyaipay-gateway-2
+    hostname: mdyaipay-gateway-2
+    ports:
+      - "8042:8041"
+    environment:
+      <<: *gateway-env-base
+      MDYAIPAY_SENTINEL_TRANSPORT_PORT: "8720"
+    depends_on:
+      sentinel-dashboard:
+        condition: service_healthy
+      mdyaipay-user-1:
+        condition: service_healthy
+      mdyaipay-user-2:
+        condition: service_healthy
+      mdyaipay-payment-1:
+        condition: service_healthy
+      mdyaipay-payment-2:
+        condition: service_healthy
 
 networks:
   mysql:

@@ -67,6 +67,14 @@
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-sentinel-spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-nacos</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
             <artifactId>mdyaipay-tools-ratelimit-redisson</artifactId>
         </dependency>
         <!-- backend=redis 时 Lettuce 驱动；与 redisson 二选一由 mdyaipay.ratelimit.backend 决定 -->

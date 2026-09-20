@@ -1,0 +1,19 @@
+# Nacos dataId: mdyaipay-gateway-ratelimit.yaml  group: DEFAULT_GROUP
+# 内容为 mdyaipay.ratelimit 下的字段（不含前缀）
+enabled: true
+backend: redisson
+fail-open: false
+default-policy:
+  algorithm: SLIDING_WINDOW_LOG
+  limit: 20
+  window: 1s
+rules:
+  - id: gateway-payment-collect
+    match:
+      path: /api/v1/payments/collect
+      methods: [POST]
+    policy:
+      algorithm: SLIDING_WINDOW_LOG
+      limit: 20
+      window: 1s
+    key-resolvers: [path]

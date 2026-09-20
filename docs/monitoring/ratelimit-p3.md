@@ -9,7 +9,8 @@
 | [`prometheus/ratelimit-recording-rules.yaml`](prometheus/ratelimit-recording-rules.yaml) | SLO 用 Recording Rules（429 与 5xx 分离） |
 | [`prometheus/ratelimit-alerts.yaml`](prometheus/ratelimit-alerts.yaml) | 限流与网关告警规则 |
 | [`alertmanager/ratelimit-routes.example.yaml`](alertmanager/ratelimit-routes.example.yaml) | 按 `env` 分流的接收器示例 |
-| [`grafana/ratelimit-gateway-dashboard.json`](grafana/ratelimit-gateway-dashboard.json) | 三行看板（入口 / 拒绝 / 放行） |
+| [`grafana/ratelimit-gateway-dashboard.json`](grafana/ratelimit-gateway-dashboard.json) | 限流与流量看板（变量切换 gateway / user / payment） |
+| [`prometheus/scrape-config.example.yaml`](prometheus/scrape-config.example.yaml) | 三服务 scrape 示例 |
 
 挂载方式（示意）：
 
@@ -20,6 +21,7 @@ rule_files:
   - /etc/prometheus/rules/ratelimit-alerts.yaml
 
 scrape_configs:
+  # 完整三服务见 prometheus/scrape-config.example.yaml
   - job_name: mdyaipay-gateway
     metrics_path: /actuator/prometheus
     static_configs:
@@ -27,6 +29,20 @@ scrape_configs:
         labels:
           env: prod
           application: mdyaipay-gateway
+  - job_name: mdyaipay-user
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['mdyaipay-user:8082']
+        labels:
+          env: prod
+          application: mdyaipay-user
+  - job_name: mdyaipay-payment
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['mdyaipay-payment:8081']
+        labels:
+          env: prod
+          application: mdyaipay-payment
 ```
 
 校验：

@@ -3,12 +3,12 @@ package com.mdyaipay.tools.ratelimit.autoconfigure;
 import com.mdyaipay.tools.ratelimit.RateLimiter;
 import com.mdyaipay.tools.ratelimit.dubbo.RateLimitDubboConsumerFilter;
 import com.mdyaipay.tools.ratelimit.dubbo.RateLimitDubboProviderFilter;
-import com.mdyaipay.tools.ratelimit.gateway.RateLimitGatewayFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * 启动时校验限流装配：避免 {@code enabled=true} 却无 {@link RateLimiter} 时 Filter 静默缺失。
@@ -17,28 +17,31 @@ final class RateLimitStartupValidator implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitStartupValidator.class);
 
+    /** {@link RateLimitGatewayAutoConfiguration} 注册的 Bean 名；勿注入 Filter 类型以免在非 Gateway 应用加载 GlobalFilter。 */
+    private static final String GATEWAY_FILTER_BEAN = "rateLimitGatewayFilter";
+
     private final RateLimitProperties properties;
+    private final ConfigurableApplicationContext applicationContext;
     private final ObjectProvider<RateLimiter> rateLimiter;
-    private final ObjectProvider<RateLimitGatewayFilter> gatewayFilter;
     private final ObjectProvider<RateLimitDubboProviderFilter> dubboProviderFilter;
     private final ObjectProvider<RateLimitDubboConsumerFilter> dubboConsumerFilter;
 
     /**
      * @param properties           限流配置
+     * @param applicationContext   Spring 上下文（按 Bean 名探测 Gateway Filter，避免强依赖 Gateway 类）
      * @param rateLimiter          后端限流器（可选）
-     * @param gatewayFilter        Gateway Filter（可选）
      * @param dubboProviderFilter  Dubbo Provider Filter（可选）
      * @param dubboConsumerFilter  Dubbo Consumer Filter（可选）
      */
     RateLimitStartupValidator(
             RateLimitProperties properties,
+            ConfigurableApplicationContext applicationContext,
             ObjectProvider<RateLimiter> rateLimiter,
-            ObjectProvider<RateLimitGatewayFilter> gatewayFilter,
             ObjectProvider<RateLimitDubboProviderFilter> dubboProviderFilter,
             ObjectProvider<RateLimitDubboConsumerFilter> dubboConsumerFilter) {
         this.properties = properties;
+        this.applicationContext = applicationContext;
         this.rateLimiter = rateLimiter;
-        this.gatewayFilter = gatewayFilter;
         this.dubboProviderFilter = dubboProviderFilter;
         this.dubboConsumerFilter = dubboConsumerFilter;
     }
@@ -67,16 +70,16 @@ final class RateLimitStartupValidator implements ApplicationRunner {
         }
         boolean hasHttpRules = hasHttpRules();
         boolean hasDubboRules = hasDubboRules();
-        RateLimitGatewayFilter filter = gatewayFilter.getIfAvailable();
+        boolean gatewayRegistered = applicationContext.containsBean(GATEWAY_FILTER_BEAN);
         log.info(
                 "mdyaipay.ratelimit 已启用 backend={} rules={} rateLimiter={} gatewayFilter={} dubboProvider={} dubboConsumer={}",
                 properties.getBackend(),
                 ruleCount,
                 limiter.getClass().getSimpleName(),
-                filter != null ? "registered" : "absent",
+                gatewayRegistered ? "registered" : "absent",
                 dubboProviderFilter.getIfAvailable() != null ? "registered" : "absent",
                 dubboConsumerFilter.getIfAvailable() != null ? "registered" : "absent");
-        if (hasHttpRules && filter == null) {
+        if (hasHttpRules && !gatewayRegistered) {
             throw new IllegalStateException(
                     "mdyaipay.ratelimit 含 HTTP 规则但未注册 RateLimitGatewayFilter；"
                             + "请确认依赖 spring-cloud-starter-gateway 且存在 ApiResponse（common-core）");

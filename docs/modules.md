@@ -21,7 +21,10 @@
 | 公共 | `mdyaipay-tools-ratelimit-core` | 限流契约、策略模型、内存算法与键解析 SPI |
 | 公共 | `mdyaipay-tools-ratelimit-redis` | Lettuce + Lua 分布式限流驱动 |
 | 公共 | `mdyaipay-tools-ratelimit-redisson` | Redisson 驱动（首版：滑动窗口日志） |
+| 公共 | `mdyaipay-tools-ratelimit-nacos` | Nacos 动态刷新 `mdyaipay.ratelimit.*` |
 | 公共 | `mdyaipay-tools-ratelimit-spring-boot` | Gateway/Servlet 自动配置与 429 响应 |
+| 公共（聚合） | `mdyaipay-tools-sentinel` | Sentinel 单机限流 + Dashboard 对接整体限流 |
+| 公共 | `mdyaipay-tools-sentinel-spring-boot` | 双层限流 Filter 与 `cluster:`/`local:` 规则约定 |
 | 文档 | [`docs/superpowers/specs/2026-09-21-ratelimit-monitoring-design.md`](superpowers/specs/2026-09-21-ratelimit-monitoring-design.md) | 限流与网关流量监控设计 |
 | 文档 | [`docs/monitoring/ratelimit-p1-prometheus.md`](monitoring/ratelimit-p1-prometheus.md) | M1：Prometheus 指标与 PromQL |
 | 文档 | [`docs/monitoring/ratelimit-p2.md`](monitoring/ratelimit-p2.md) | P2：Servlet 埋点、SkyWalking Tag、压测 status 分布 |

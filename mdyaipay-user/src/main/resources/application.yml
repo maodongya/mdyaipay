@@ -29,6 +29,11 @@ user:
     merchant-topic: MDYAIPAY_USER_MERCHANT
 
 mdyaipay:
+  sentinel:
+    enabled: ${MDYAIPAY_SENTINEL_ENABLED:true}
+    dashboard: ${MDYAIPAY_SENTINEL_DASHBOARD:127.0.0.1:8858}
+    transport-port: ${MDYAIPAY_SENTINEL_TRANSPORT_PORT:8719}
+    seed-local-rules-from-ratelimit: true
   ratelimit:
     enabled: ${MDYAIPAY_RATELIMIT_ENABLED:true}
     backend: ${MDYAIPAY_RATELIMIT_BACKEND:redisson}
@@ -38,6 +43,10 @@ mdyaipay:
       timeout: 200ms
     dubbo:
       enabled: true
+    nacos:
+      enabled: ${MDYAIPAY_RATELIMIT_NACOS_ENABLED:false}
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      group: ${NACOS_CONFIG_GROUP:DEFAULT_GROUP}
     default-policy:
       algorithm: SLIDING_WINDOW_COUNTER
       limit: 20
@@ -81,6 +90,8 @@ dubbo:
     port: ${DUBBO_PORT:20882}
   registry:
     address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
+  metrics:
+    enable: true
 
 rocketmq:
   name-server: ${ROCKETMQ_NAMESRV:127.0.0.1:9876}
@@ -96,7 +107,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   endpoint:
     health:
       probes:

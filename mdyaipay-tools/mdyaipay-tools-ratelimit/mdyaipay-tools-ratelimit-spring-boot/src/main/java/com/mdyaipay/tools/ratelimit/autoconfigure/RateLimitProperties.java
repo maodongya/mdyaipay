@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 限流配置：{@code mdyaipay.ratelimit.*}。
  * <p>
- * <b>不负责</b> 规则热更新——首版仅静态 YAML/属性绑定。
+ * 集群规则可由 Nacos（{@code mdyaipay.ratelimit.nacos}）或 Sentinel {@code cluster:{ruleId}} 动态覆盖。
  */
 @ConfigurationProperties(prefix = "mdyaipay.ratelimit")
 public class RateLimitProperties {

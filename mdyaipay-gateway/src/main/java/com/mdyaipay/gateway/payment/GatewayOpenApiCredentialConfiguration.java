@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * gateway→user 查凭证：默认 Dubbo；配置非空 {@code user-base-url} 时走内网 HTTP。
@@ -15,6 +16,7 @@ public class GatewayOpenApiCredentialConfiguration {
      * @param userBaseUrl 非空则 HTTP，否则 Dubbo（Consumer 限流生效）
      */
     @Bean
+    @Primary
     OpenApiCredentialResolver openApiCredentialResolver(
             @Value("${mdyaipay.gateway.user-base-url:}") String userBaseUrl,
             ObjectMapper json,

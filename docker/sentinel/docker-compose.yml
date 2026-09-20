@@ -1,0 +1,48 @@
+# 本地中间件：Sentinel Dashboard + Nacos（standalone）
+# 启动：scripts/run-sentinel-dashboard-docker.sh
+name: mdyaipay-infra
+
+services:
+  sentinel-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: mdyaipay-user:local
+    image: mdyaipay-sentinel-dashboard:local
+    container_name: mdyaipay-sentinel-dashboard
+    mem_limit: 512m
+    memswap_limit: 512m
+    ports:
+      - "8858:8858"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8858/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  nacos:
+    # 镜像拉取失败时可改为 docker.1ms.run/nacos/nacos-server:v2.4.3（与本地 zookeeper 镜像源一致）
+    image: ${NACOS_IMAGE:-nacos/nacos-server:v2.4.3}
+    container_name: mdyaipay-nacos
+    # Nacos 2.x 启动期除堆外还有 metaspace/线程栈等；512m 易被 OOMKill（exit 137）
+    mem_limit: 768m
+    memswap_limit: 768m
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      NACOS_AUTH_ENABLE: "false"
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+      # 镜像默认 Xmn=512m，与 256m 堆冲突且放大 RSS，须显式调小
+      JVM_XMN: 128m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 45s

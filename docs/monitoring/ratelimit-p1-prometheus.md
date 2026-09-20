@@ -1,10 +1,14 @@
 # 限流 M1 监控（精简）
 
-Gateway 启动后：
+各服务启动后（gateway / user / payment 均暴露 `prometheus` 端点）：
 
 ```text
-GET http://127.0.0.1:8041/actuator/prometheus
+GET http://127.0.0.1:8041/actuator/prometheus   # mdyaipay-gateway（HTTP 入口 + Dubbo Consumer 限流）
+GET http://127.0.0.1:8082/actuator/prometheus   # mdyaipay-user（Dubbo Provider：MerchantGatewayFacade）
+GET http://127.0.0.1:8081/actuator/prometheus   # mdyaipay-payment（Dubbo Provider：PaymentGatewayFacade）
 ```
+
+user / payment 业务流量以 **Dubbo RPC** 为主：入口 HTTP QPS 可能接近 0（仅 health/actuator）；**Facade 流量**看 `mdyaipay_ratelimit_decisions_total{outcome="allowed"}` 与 Dubbo Micrometer 指标（`dubbo.metrics.enable=true`）。Prometheus scrape 示例见 [`prometheus/scrape-config.example.yaml`](prometheus/scrape-config.example.yaml)。
 
 ## M1 只认两个产物
 

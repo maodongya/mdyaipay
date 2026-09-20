@@ -18,7 +18,10 @@ groups:
             429 为预期行为时检查是否误配 limit 或遭受异常流量；与 5xx 告警分开处理。
 
       - alert: RateLimitBackendErrors
-        expr: mdyaipay:ratelimit:backend_error:rate5m > 0
+        expr: |
+          mdyaipay:ratelimit:backend_error:rate5m > 0
+          or mdyaipay:user:ratelimit:backend_error:rate5m > 0
+          or mdyaipay:payment:ratelimit:backend_error:rate5m > 0
         for: 2m
         labels:
           severity: critical
@@ -27,7 +30,29 @@ groups:
           summary: "限流后端异常（Redis/Redisson）"
           description: |
             outcome=backend_error 持续增加。fail-closed 时客户端可见 503；
-            查 Redis 连通性、Lua 脚本与 gateway WARN event=rate_limit_backend_error。
+            查 Redis 连通性、Lua 脚本与各服务 WARN event=rate_limit_backend_error。
+
+      - alert: MdyaipayUserScrapeDown
+        expr: up{job="mdyaipay-user"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: user
+        annotations:
+          summary: "Prometheus 无法采集 mdyaipay-user"
+          description: |
+            :8082/actuator/prometheus 不可达或 user 未启动；Dubbo Provider 限流指标会缺失。
+
+      - alert: MdyaipayPaymentScrapeDown
+        expr: up{job="mdyaipay-payment"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: payment
+        annotations:
+          summary: "Prometheus 无法采集 mdyaipay-payment"
+          description: |
+            :8081/actuator/prometheus 不可达或 payment 未启动；Dubbo Provider 限流指标会缺失。
 
       - alert: MdyaipayGatewayScrapeDown
         expr: up{job="mdyaipay-gateway"} == 0

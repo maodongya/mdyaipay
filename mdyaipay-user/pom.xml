@@ -37,6 +37,14 @@
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-sentinel-spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-nacos</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
             <artifactId>mdyaipay-tools-ratelimit-redisson</artifactId>
         </dependency>
         <dependency>
@@ -72,6 +80,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
