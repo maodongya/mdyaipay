@@ -1,0 +1,86 @@
+# mdyaipay 网关限流 — Prometheus 告警（配合 Alertmanager 按 env 路由）
+groups:
+  - name: mdyaipay_ratelimit
+    rules:
+      - alert: RateLimit429Spike
+        expr: |
+          mdyaipay:ratelimit:denied_ratio:rate5m > 0.5
+          and
+          sum(mdyaipay:ratelimit:decisions:rate5m) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: ratelimit
+        annotations:
+          summary: "限流拒绝占比过高（{{ $labels.env }}）"
+          description: |
+            超过半数限流判定为 denied，且判定 QPS > 1/s。
+            429 为预期行为时检查是否误配 limit 或遭受异常流量；与 5xx 告警分开处理。
+
+      - alert: RateLimitBackendErrors
+        expr: mdyaipay:ratelimit:backend_error:rate5m > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: ratelimit
+        annotations:
+          summary: "限流后端异常（Redis/Redisson）"
+          description: |
+            outcome=backend_error 持续增加。fail-closed 时客户端可见 503；
+            查 Redis 连通性、Lua 脚本与 gateway WARN event=rate_limit_backend_error。
+
+      - alert: MdyaipayGatewayScrapeDown
+        expr: up{job="mdyaipay-gateway"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: gateway
+        annotations:
+          summary: "Prometheus 无法采集 mdyaipay-gateway"
+          description: |
+            host.docker.internal:8041 不可达或网关未启动。
+            看板会出现 denied/allowed No data、仅零星 503 尖刺。
+
+      - alert: RateLimitDecisionsAbsent
+        expr: |
+          mdyaipay:gateway:http_requests:rate5m > 10
+          and
+          (
+            sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-gateway"}[5m]))
+            or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway"}[5m]))
+          ) == 0
+        for: 10m
+        labels:
+          severity: warning
+          component: ratelimit
+        annotations:
+          summary: "入口有流量但无限流指标"
+          description: |
+            高 QPS 下 mdyaipay_ratelimit_decisions_total 无增量。
+            检查 mdyaipay.ratelimit.enabled、rules 匹配与启动日志 gatewayFilter=registered。
+
+      - alert: RateLimitHigh5xxRate
+        expr: mdyaipay:gateway:http_5xx_ratio:rate5m > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: gateway
+        annotations:
+          summary: "网关 5xx 比例超 SLO 阈值（不含 429）"
+          description: |
+            5xx 占 HTTP 总量 > 1%（可调阈值）。429 不计入此告警；
+            结合 RateLimitBackendErrors 与下游 502/504 排查。
+
+      - alert: GatewayHighLatency
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum(rate(http_server_requests_seconds_bucket{application="mdyaipay-gateway"}[5m])) by (le)
+          ) > 2
+        for: 10m
+        labels:
+          severity: warning
+          component: gateway
+        annotations:
+          summary: "网关 HTTP P99 延迟 > 2s"
+          description: "容量或下游变慢；与限流 denied 无直接关系，辅助压测与容量规划。"

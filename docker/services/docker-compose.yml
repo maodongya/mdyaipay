@@ -79,8 +79,6 @@ services:
       - "8041:8041"
     environment:
       MDYAIPAY_GATEWAY_PORT: "8041"
-      USER_BASE_URL: http://mdyaipay-user:8082
-      PAYMENT_BASE_URL: http://mdyaipay-payment:8081
       DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
     depends_on:
       mdyaipay-user:

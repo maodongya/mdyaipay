@@ -75,7 +75,8 @@ public final class LoadTestEngine {
                 metrics.maxLatencyMillis(),
                 metrics.meanLatencyMillis(),
                 metrics.latencyPercentilesMillis(),
-                metrics.errorSamples()
+                metrics.errorSamples(),
+                metrics.httpStatusCounts()
         );
     }
 

@@ -33,6 +33,7 @@
         <aspectj.version>1.9.22.1</aspectj.version>
         <dubbo.version>3.3.2</dubbo.version>
         <rocketmq-spring.version>2.3.1</rocketmq-spring.version>
+        <redisson.version>3.40.2</redisson.version>
     </properties>
 
     <dependencyManagement>
@@ -141,6 +142,16 @@
                 <groupId>com.mdyaipay</groupId>
                 <artifactId>mdyaipay-tools-ratelimit-redis</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-tools-ratelimit-redisson</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson</artifactId>
+                <version>${redisson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.mdyaipay</groupId>

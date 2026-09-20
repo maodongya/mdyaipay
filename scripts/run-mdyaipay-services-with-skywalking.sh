@@ -6,7 +6,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/scripts/skywalking-agent-env.sh"
 
 export DUBBO_REGISTRY_ADDRESS="${DUBBO_REGISTRY_ADDRESS:-zookeeper://127.0.0.1:2181}"
-export PAYMENT_BASE_URL="${PAYMENT_BASE_URL:-http://127.0.0.1:8081}"
+export PAYMENT_BASE_URL="${PAYMENT_BASE_URL:-}"
 SW_ENV="${SW_AGENT_ENV:-local}"
 
 if [[ "${SKYWALKING_START_OAP:-0}" == "1" ]]; then

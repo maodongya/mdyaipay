@@ -22,5 +22,7 @@ class MetricsCollectorTest {
         assertEquals(1, c.errorCount());
         assertTrue(c.latencyPercentilesMillis().get(0.5) >= 50);
         assertEquals(1, c.errorSamples().size());
+        assertEquals(100L, c.httpStatusCounts().get(200));
+        assertEquals(1L, c.httpStatusCounts().get(500));
     }
 }

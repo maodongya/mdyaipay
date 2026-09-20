@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -21,6 +23,7 @@ public final class MetricsCollector {
     private final LongAdder total = new LongAdder();
     private final LongAdder success = new LongAdder();
     private final LongAdder errors = new LongAdder();
+    private final ConcurrentHashMap<Integer, LongAdder> statusCounts = new ConcurrentHashMap<>();
     private final List<String> errorSamples = new ArrayList<>();
 
     public MetricsCollector(MetricsProfile profile) {
@@ -36,6 +39,7 @@ public final class MetricsCollector {
             errors.increment();
             maybeRecordError(outcome);
         }
+        statusCounts.computeIfAbsent(outcome.statusCode(), k -> new LongAdder()).increment();
         reservoir.record(outcome.latencyNanos());
     }
 
@@ -89,5 +93,14 @@ public final class MetricsCollector {
 
     public double meanLatencyMillis() {
         return reservoir.snapshot().meanMillis();
+    }
+
+    /**
+     * HTTP 状态码分布（正式阶段）；非 HTTP 驱动可能含 {@code 0} 或负值。
+     */
+    public Map<Integer, Long> httpStatusCounts() {
+        Map<Integer, Long> sorted = new TreeMap<>();
+        statusCounts.forEach((code, adder) -> sorted.put(code, adder.sum()));
+        return Map.copyOf(sorted);
     }
 }

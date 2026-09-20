@@ -1,0 +1,173 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" } }, "type": "value" },
+            { "options": { "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 10,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Prometheus 采集（up）",
+      "type": "stat",
+      "targets": [{ "expr": "up{job=\"$job\"}", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 11,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "上次 scrape 耗时",
+      "type": "stat",
+      "targets": [{ "expr": "scrape_duration_seconds{job=\"$job\"}", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 0 },
+      "id": 12,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "入口总 QPS（Recording 或原始）",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "mdyaipay:gateway:http_requests:rate5m or sum(rate(http_server_requests_seconds_count{job=\"$job\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+      "id": 1,
+      "title": "入口 HTTP QPS（按 status，关注 200 / 429 / 503）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"$job\"}[$__rate_interval])) by (status)",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 2,
+      "title": "限流拒绝 QPS（denied）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "mdyaipay:ratelimit:denied:rate5m or sum(rate(mdyaipay_ratelimit_decisions_total{job=\"$job\",outcome=\"denied\"}[$__rate_interval])) by (rule_id)",
+          "legendFormat": "{{rule_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 3,
+      "title": "限流放行 QPS（allowed，压测应 ≈ limit/s）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(mdyaipay_ratelimit_decisions_total{job=\"$job\",outcome=\"allowed\"}[$__rate_interval])) by (rule_id)",
+          "legendFormat": "{{rule_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 20 },
+      "id": 5,
+      "title": "限流判定（全 outcome）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(mdyaipay_ratelimit_decisions_total{job=\"$job\"}[$__rate_interval])) by (outcome, rule_id)",
+          "legendFormat": "{{outcome}} {{rule_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 27 },
+      "id": 4,
+      "title": "SLO：5xx 占比（不含 429）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "mdyaipay:gateway:http_5xx_ratio:rate5m or (sum(rate(http_server_requests_seconds_count{job=\"$job\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"$job\"}[5m])), 1e-9))",
+          "legendFormat": "5xx ratio",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 27 },
+      "id": 6,
+      "title": "429 QPS（预期拒绝，不计入 5xx SLO）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "mdyaipay:gateway:http_429:rate5m or sum(rate(http_server_requests_seconds_count{job=\"$job\",status=\"429\"}[$__rate_interval]))",
+          "legendFormat": "429",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["mdyaipay", "ratelimit", "gateway"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": { "text": "Prometheus", "value": "Prometheus" }
+      },
+      {
+        "name": "job",
+        "type": "constant",
+        "query": "mdyaipay-gateway",
+        "current": { "text": "mdyaipay-gateway", "value": "mdyaipay-gateway" }
+      },
+      {
+        "name": "application",
+        "type": "constant",
+        "query": "mdyaipay-gateway",
+        "current": { "text": "mdyaipay-gateway", "value": "mdyaipay-gateway" }
+      }
+    ]
+  },
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "browser",
+  "title": "mdyaipay Gateway 限流与入口",
+  "uid": "mdyaipay-ratelimit-gateway",
+  "version": 2
+}

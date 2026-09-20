@@ -19,6 +19,9 @@ public enum RateLimitScripts {
     /** 滑动窗口计数。 */
     SLIDING_WINDOW_COUNTER(RateLimitAlgorithm.SLIDING_WINDOW_COUNTER, "ratelimit/lua/sliding_window_counter.lua"),
 
+    /** 滑动窗口日志（ZSET + ZADD）。 */
+    SLIDING_WINDOW_LOG(RateLimitAlgorithm.SLIDING_WINDOW_LOG, "ratelimit/lua/sliding_window_log.lua"),
+
     /** 令牌桶。 */
     TOKEN_BUCKET(RateLimitAlgorithm.TOKEN_BUCKET, "ratelimit/lua/token_bucket.lua");
 

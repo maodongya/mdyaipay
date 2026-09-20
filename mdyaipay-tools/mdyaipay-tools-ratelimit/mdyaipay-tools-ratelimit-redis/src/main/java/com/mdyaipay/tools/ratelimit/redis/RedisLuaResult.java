@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Lua 脚本统一四元组返回值：allowed / remaining / limit / retryAfterMs。
+ * Lua 脚本统一四元组返回值：allowed / remaining / limit / 第四字段。
+ * <p>
+ * 多数算法第四字段为 {@code retryAfterMs}；{@link RateLimitAlgorithm#SLIDING_WINDOW_LOG}
+ * 拒绝时为最旧 ZSET score（毫秒），由 Java 换算 retryAfter。
  *
  * @param allowed      是否允许（Lua 1/0）
  * @param remaining    剩余配额
  * @param limit        策略上限
- * @param retryAfterMs 建议重试毫秒；允许时为 0
+ * @param retryAfterMs 建议重试毫秒，或滑动日志拒绝时的最旧 score
  */
 public record RedisLuaResult(boolean allowed, long remaining, long limit, long retryAfterMs) {
 

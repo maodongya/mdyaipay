@@ -11,7 +11,7 @@ import java.time.Duration;
  * @param limit                窗口内最大请求数，或令牌桶容量；必须 &gt; 0
  * @param window               固定/滑动窗口长度；令牌桶为 refill 周期对齐字段；必须为正
  * @param refillRatePerSecond  仅 {@link RateLimitAlgorithm#TOKEN_BUCKET}：每秒补充令牌数，须 &gt; 0；其它算法可为 0
- * @param slidingSegments      仅 {@link RateLimitAlgorithm#SLIDING_WINDOW_COUNTER}：分段数，须 ≥ 2；其它可为 0
+ * @param slidingSegments      仅 {@link RateLimitAlgorithm#SLIDING_WINDOW_COUNTER}：分段数，须 ≥ 2；日志/固定窗口可为 0
  */
 public record RateLimitPolicy(
         RateLimitAlgorithm algorithm,

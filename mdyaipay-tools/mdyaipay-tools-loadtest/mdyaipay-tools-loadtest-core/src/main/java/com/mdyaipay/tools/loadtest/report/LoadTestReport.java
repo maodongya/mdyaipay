@@ -9,6 +9,7 @@ import java.util.Map;
  *
  * @param latencyPercentilesMillis 键为分位点（如 {@code 0.99}），值为毫秒
  * @param errorSamples             截断后的错误摘要列表，见 {@link com.mdyaipay.tools.loadtest.model.MetricsProfile#maxErrorSamples()}
+ * @param httpStatusCounts         正式阶段 HTTP 状态码计数（P2 限流验收：429/503 占比）
  */
 public record LoadTestReport(
         String planName,
@@ -24,6 +25,7 @@ public record LoadTestReport(
         double maxLatencyMillis,
         double meanLatencyMillis,
         Map<Double, Double> latencyPercentilesMillis,
-        List<String> errorSamples
+        List<String> errorSamples,
+        Map<Integer, Long> httpStatusCounts
 ) {
 }

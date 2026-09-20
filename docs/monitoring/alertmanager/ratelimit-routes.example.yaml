@@ -1,0 +1,55 @@
+# Alertmanager 路由示例 — 复制到运维 Alertmanager 配置并按 receiver 名替换
+# 依赖 Prometheus external_labels.env 或 scrape labels.env 与告警 inherit 一致
+
+route:
+  receiver: default-null
+  group_by: ['alertname', 'env', 'application']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - env="prod"
+        - severity="critical"
+        - component=~"ratelimit|gateway"
+      receiver: prod-oncall
+      continue: false
+
+    - matchers:
+        - env="prod"
+        - severity="warning"
+        - component="ratelimit"
+      receiver: prod-slack-ratelimit
+
+    - matchers:
+        - env="staging"
+        - component=~"ratelimit|gateway"
+      receiver: staging-slack
+
+    - matchers:
+        - env="dev"
+      receiver: dev-muted
+
+receivers:
+  - name: default-null
+
+  - name: prod-oncall
+    # pagerduty_configs / webhook_configs / 企业微信 等按平台填写
+
+  - name: prod-slack-ratelimit
+    # slack_configs: channel #ratelimit-alerts
+
+  - name: staging-slack
+    # slack_configs: channel #staging-gateway
+
+  - name: dev-muted
+    # 可选 webhook 仅写日志，避免 dev 噪声
+
+inhibit_rules:
+  # 后端已 critical 时抑制同 env 的 429 占比 warning，减少重复页
+  - source_matchers:
+      - alertname="RateLimitBackendErrors"
+      - severity="critical"
+    target_matchers:
+      - alertname="RateLimit429Spike"
+    equal: ['env', 'application']

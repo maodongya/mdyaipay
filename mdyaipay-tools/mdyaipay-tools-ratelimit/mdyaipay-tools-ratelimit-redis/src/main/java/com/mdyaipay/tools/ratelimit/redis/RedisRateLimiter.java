@@ -11,10 +11,9 @@ import java.time.Duration;
 import java.util.Objects;
 
 /**
- * Redis 限流门面：按 {@link RateLimitPolicy#algorithm()} 执行对应 Lua 脚本。
+ * Redis 限流门面：Java 预计算时间与 key，Lua 只做原子读写。
  * <p>
- * <b>不负责</b> 创建 Redis 客户端——由调用方注入 {@link StatefulRedisConnection}；
- * 本类在 {@code closeConnection=true} 时关闭连接。
+ * <b>不负责</b> 创建 Redis 客户端——由调用方注入 {@link StatefulRedisConnection}。
  */
 public final class RedisRateLimiter implements RateLimiter, AutoCloseable {
 
@@ -50,29 +49,93 @@ public final class RedisRateLimiter implements RateLimiter, AutoCloseable {
         validate(key, policy);
         RateLimitScripts script = RateLimitScripts.forAlgorithm(policy.algorithm());
         String redisKey = RedisKeyNames.of(policy.algorithm(), key);
-        RedisLuaResult result = switch (policy.algorithm()) {
-            case FIXED_WINDOW -> scripts.eval(
-                    script,
-                    redisKey,
-                    Long.toString(policy.limit()),
-                    Long.toString(policy.window().toMillis()));
-            case SLIDING_WINDOW_COUNTER -> scripts.eval(
-                    script,
-                    redisKey,
-                    Long.toString(policy.limit()),
-                    Long.toString(policy.window().toMillis()),
-                    Integer.toString(policy.slidingSegments()));
-            case TOKEN_BUCKET -> scripts.eval(
-                    script,
-                    redisKey,
-                    Long.toString(policy.limit()),
-                    Double.toString(policy.refillRatePerSecond()));
+        RedisServerTime time = scripts.serverTime();
+        return switch (policy.algorithm()) {
+            case FIXED_WINDOW -> toDecision(
+                    scripts.eval(
+                            script,
+                            fixedWindowBucketKey(redisKey, time, policy.window().toMillis()),
+                            Long.toString(policy.limit()),
+                            Long.toString(policy.window().toMillis())),
+                    policy.algorithm());
+            case SLIDING_WINDOW_COUNTER -> toDecision(
+                    scripts.eval(
+                            script,
+                            redisKey,
+                            slidingCounterArgv(policy, time)),
+                    policy.algorithm());
+            case SLIDING_WINDOW_LOG -> slidingWindowLogDecision(
+                    scripts.eval(
+                            script,
+                            redisKey,
+                            Long.toString(policy.limit()),
+                            Long.toString(time.epochMillis()),
+                            Long.toString(time.slidingWindowStart(policy.window().toMillis())),
+                            time.zsetMember(),
+                            Long.toString(policy.window().toMillis())),
+                    policy,
+                    time);
+            case TOKEN_BUCKET -> toDecision(
+                    scripts.eval(
+                            script,
+                            redisKey,
+                            Long.toString(policy.limit()),
+                            Double.toString(policy.refillRatePerSecond()),
+                            Long.toString(time.epochMillis()),
+                            Long.toString(RedisServerTime.tokenBucketKeyTtlMs(
+                                    policy.limit(), policy.refillRatePerSecond()))),
+                    policy.algorithm());
         };
-        return toDecision(result, policy.algorithm());
     }
 
     /**
-     * 将 Lua 结果转为契约 Decision。
+     * 固定窗口 bucket key：baseKey + 对齐 windowStart。
+     */
+    private static String fixedWindowBucketKey(String baseKey, RedisServerTime time, long windowMs) {
+        return baseKey + ':' + time.fixedWindowStart(windowMs);
+    }
+
+    /**
+     * 滑动窗口计数 Lua ARGV：limit、段序号、段内 elapsed、segmentMs、PEXPIRE。
+     */
+    private static String[] slidingCounterArgv(RateLimitPolicy policy, RedisServerTime time) {
+        long windowMs = policy.window().toMillis();
+        int segments = policy.slidingSegments();
+        long segmentMs = Math.max(1L, windowMs / segments);
+        return new String[] {
+            Long.toString(policy.limit()),
+            Long.toString(time.slidingSegmentIndex(segmentMs)),
+            Long.toString(time.elapsedInSegment(segmentMs)),
+            Long.toString(segmentMs),
+            Long.toString(windowMs * 2L)
+        };
+    }
+
+    /**
+     * 滑动窗口日志：拒绝时 Lua 第 4 字段为最旧 score，retryAfter 在 Java 侧计算。
+     */
+    private static RateLimitDecision slidingWindowLogDecision(
+            RedisLuaResult result, RateLimitPolicy policy, RedisServerTime time) {
+        if (result.allowed()) {
+            return new RateLimitDecision(
+                    true,
+                    result.remaining(),
+                    result.limit(),
+                    Duration.ZERO,
+                    RateLimitAlgorithm.SLIDING_WINDOW_LOG);
+        }
+        long windowMs = policy.window().toMillis();
+        long retryMs = time.retryAfterMsFromOldest(result.retryAfterMs(), windowMs);
+        return new RateLimitDecision(
+                false,
+                0,
+                result.limit(),
+                Duration.ofMillis(retryMs),
+                RateLimitAlgorithm.SLIDING_WINDOW_LOG);
+    }
+
+    /**
+     * 将 Lua 结果转为契约 Decision（第 4 字段即 retryAfterMs）。
      */
     private static RateLimitDecision toDecision(RedisLuaResult result, RateLimitAlgorithm algorithm) {
         Duration retryAfter = result.retryAfterMs() <= 0

@@ -64,6 +64,13 @@ public final class CompositeReportExporter implements ReportExporter {
             md.append("| P").append((int) (e.getKey() * 100)).append(" | ")
                     .append(fmt(e.getValue())).append(" |\n");
         }
+        if (report.httpStatusCounts() != null && !report.httpStatusCounts().isEmpty()) {
+            md.append("\n## HTTP status\n\n");
+            md.append("| Status | Count |\n|--------|------:|\n");
+            for (Map.Entry<Integer, Long> e : report.httpStatusCounts().entrySet()) {
+                md.append("| ").append(e.getKey()).append(" | ").append(e.getValue()).append(" |\n");
+            }
+        }
         if (!report.errorSamples().isEmpty()) {
             md.append("\n## Errors (sample)\n\n");
             for (String err : report.errorSamples()) {
@@ -86,6 +93,13 @@ public final class CompositeReportExporter implements ReportExporter {
                         + fmt(report.maxLatencyMillis())));
         for (Map.Entry<Double, Double> e : report.latencyPercentilesMillis().entrySet()) {
             rows.append(row("P" + (int) (e.getKey() * 100), fmt(e.getValue()) + " ms"));
+        }
+        if (report.httpStatusCounts() != null && !report.httpStatusCounts().isEmpty()) {
+            StringBuilder status = new StringBuilder();
+            for (Map.Entry<Integer, Long> e : report.httpStatusCounts().entrySet()) {
+                status.append(e.getKey()).append(": ").append(e.getValue()).append("; ");
+            }
+            rows.append(row("HTTP status", status.toString().trim()));
         }
         String html = """
                 <!DOCTYPE html>

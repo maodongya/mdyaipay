@@ -23,6 +23,12 @@ public final class ConsoleReportFormatter {
         for (Map.Entry<Double, Double> e : report.latencyPercentilesMillis().entrySet()) {
             sb.append(String.format(Locale.ROOT, "  P%.0f: %.2f ms%n", e.getKey() * 100, e.getValue()));
         }
+        if (report.httpStatusCounts() != null && !report.httpStatusCounts().isEmpty()) {
+            sb.append("HTTP status:").append(System.lineSeparator());
+            for (Map.Entry<Integer, Long> e : report.httpStatusCounts().entrySet()) {
+                sb.append(String.format(Locale.ROOT, "  %d: %d%n", e.getKey(), e.getValue()));
+            }
+        }
         if (!report.errorSamples().isEmpty()) {
             sb.append("Error samples:").append(System.lineSeparator());
             report.errorSamples().stream().limit(10).forEach(e -> sb.append("  - ").append(e).append(System.lineSeparator()));

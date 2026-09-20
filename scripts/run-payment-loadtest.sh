@@ -14,9 +14,11 @@ stop_local_services() {
 stop_local_services
 sleep 2
 
-export PAYMENT_BASE_URL="${PAYMENT_BASE_URL:-http://127.0.0.1:8081}"
-echo "installing API modules to local Maven repo ..."
-mvn -q -pl mdyaipay-user-api,mdyaipay-payment-api,mdyaipay-tools/mdyaipay-tools-common/mdyaipay-tools-common-core -am install -DskipTests
+export PAYMENT_BASE_URL="${PAYMENT_BASE_URL:-}"
+export MDYAIPAY_RATELIMIT_BACKEND="${MDYAIPAY_RATELIMIT_BACKEND:-redisson}"
+export MDYAIPAY_RATELIMIT_REDIS_URI="${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://127.0.0.1:6379}"
+echo "installing gateway + ratelimit modules to local Maven repo ..."
+mvn -q -pl mdyaipay-gateway -am install -DskipTests
 
 LOG_DIR="$ROOT/target/local-services"
 CRED_FILE="$ROOT/target/loadtest-merchant-credentials.json"

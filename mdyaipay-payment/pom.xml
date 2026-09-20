@@ -109,6 +109,14 @@
             <artifactId>mdyaipay-tools-timetrace-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-redisson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>

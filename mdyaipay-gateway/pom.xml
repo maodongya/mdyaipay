@@ -16,6 +16,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <exclusions>
@@ -56,6 +60,19 @@
         <dependency>
             <groupId>com.mdyaipay</groupId>
             <artifactId>mdyaipay-tools-trace-spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-redisson</artifactId>
+        </dependency>
+        <!-- backend=redis 时 Lettuce 驱动；与 redisson 二选一由 mdyaipay.ratelimit.backend 决定 -->
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>

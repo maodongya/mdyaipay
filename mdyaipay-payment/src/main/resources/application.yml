@@ -15,6 +15,30 @@ spring:
       maximum-pool-size: ${PAYMENT_HIKARI_MAXIMUM_POOL_SIZE:20}
 
 mdyaipay:
+  ratelimit:
+    enabled: ${MDYAIPAY_RATELIMIT_ENABLED:true}
+    backend: ${MDYAIPAY_RATELIMIT_BACKEND:redisson}
+    fail-open: ${MDYAIPAY_RATELIMIT_FAIL_OPEN:false}
+    redis:
+      uri: ${MDYAIPAY_RATELIMIT_REDIS_URI:redis://127.0.0.1:6379}
+      timeout: 200ms
+    dubbo:
+      enabled: true
+    default-policy:
+      algorithm: SLIDING_WINDOW_COUNTER
+      limit: 20
+      window: 1s
+    rules:
+      # PaymentGatewayFacade 服务端 Dubbo：全接口 20/s（按接口维度）
+      - id: payment-gateway-facade-provider
+        match:
+          dubbo-side: provider
+          dubbo-service: com.mdyaipay.payment.api.gateway.PaymentGatewayFacade
+        policy:
+          algorithm: SLIDING_WINDOW_COUNTER
+          limit: 20
+          window: 1s
+        key-resolvers: [dubboService]
   trace:
     http:
       log-entry-on-complete: true

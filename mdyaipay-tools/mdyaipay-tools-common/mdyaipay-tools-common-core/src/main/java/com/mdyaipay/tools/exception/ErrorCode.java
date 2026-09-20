@@ -8,6 +8,10 @@ public enum ErrorCode {
     INVALID_PARAM(10002, "invalid parameter"),
     DUPLICATE_REQUEST(10003, "duplicate request"),
     NOT_FOUND(10004, "resource not found"),
+    /** 超过限流配额（HTTP 429）。 */
+    RATE_LIMITED(42900, "rate limited"),
+    /** 限流后端不可用（HTTP 503，fail-closed）。 */
+    RATE_LIMIT_BACKEND_UNAVAILABLE(50301, "rate limit backend unavailable"),
     INTERNAL_ERROR(50000, "internal error");
 
     private final int code;

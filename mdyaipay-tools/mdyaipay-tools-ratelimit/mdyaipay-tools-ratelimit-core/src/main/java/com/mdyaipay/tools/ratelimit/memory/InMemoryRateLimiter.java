@@ -16,6 +16,7 @@ public final class InMemoryRateLimiter implements RateLimiter {
 
     private final InMemoryFixedWindowRateLimiter fixedWindow;
     private final InMemorySlidingWindowCounterRateLimiter slidingWindow;
+    private final InMemorySlidingWindowLogRateLimiter slidingWindowLog;
     private final InMemoryTokenBucketRateLimiter tokenBucket;
 
     /**
@@ -32,6 +33,7 @@ public final class InMemoryRateLimiter implements RateLimiter {
         Clock c = Objects.requireNonNull(clock, "clock");
         this.fixedWindow = new InMemoryFixedWindowRateLimiter(c);
         this.slidingWindow = new InMemorySlidingWindowCounterRateLimiter(c);
+        this.slidingWindowLog = new InMemorySlidingWindowLogRateLimiter(c);
         this.tokenBucket = new InMemoryTokenBucketRateLimiter(c);
     }
 
@@ -46,6 +48,7 @@ public final class InMemoryRateLimiter implements RateLimiter {
         return switch (policy.algorithm()) {
             case FIXED_WINDOW -> fixedWindow.tryAcquire(key, policy);
             case SLIDING_WINDOW_COUNTER -> slidingWindow.tryAcquire(key, policy);
+            case SLIDING_WINDOW_LOG -> slidingWindowLog.tryAcquire(key, policy);
             case TOKEN_BUCKET -> tokenBucket.tryAcquire(key, policy);
         };
     }

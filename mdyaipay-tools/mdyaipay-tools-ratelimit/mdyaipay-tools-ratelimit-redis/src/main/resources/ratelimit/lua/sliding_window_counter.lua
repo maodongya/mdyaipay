@@ -1,38 +1,26 @@
--- 滑动窗口计数：当前段 + 上一段权重插值。
--- KEYS[1]=hashKey  ARGV[1]=limit  ARGV[2]=windowMs  ARGV[3]=segments
--- 返回 {allowed, remaining, limit, retryAfterMs}
-local t = redis.call('TIME')
-local nowMs = tonumber(t[1]) * 1000 + math.floor(tonumber(t[2]) / 1000)
+-- 滑动窗口计数：KEYS[1]=hash  ARGV=limit seg elapsed segmentMs expireMs
 local limit = tonumber(ARGV[1])
-local windowMs = tonumber(ARGV[2])
-local segments = tonumber(ARGV[3])
-local segmentMs = math.max(1, math.floor(windowMs / segments))
-local seg = math.floor(nowMs / segmentMs)
-local elapsed = nowMs % segmentMs
-local key = KEYS[1]
-local curSeg = tonumber(redis.call('HGET', key, 'seg') or '-1')
-local cur = tonumber(redis.call('HGET', key, 'cur') or '0')
-local prev = tonumber(redis.call('HGET', key, 'prev') or '0')
+local seg = tonumber(ARGV[2])
+local elapsed = tonumber(ARGV[3])
+local segmentMs = tonumber(ARGV[4])
+local h = redis.call('HMGET', KEYS[1], 'seg', 'cur', 'prev')
+local curSeg = tonumber(h[1] or '-1')
+local cur = tonumber(h[2] or '0')
+local prev = tonumber(h[3] or '0')
+local dirty = false
 if curSeg ~= seg then
-  local gap = seg - curSeg
-  if gap == 1 then
-    prev = cur
-  else
-    prev = 0
-  end
-  cur = 0
-  curSeg = seg
+  prev = (seg - curSeg == 1) and cur or 0
+  cur, curSeg, dirty = 0, seg, true
 end
-local weight = 1.0 - (elapsed / segmentMs)
-local estimated = cur + prev * weight
+local estimated = cur + prev * (1 - elapsed / segmentMs)
 if estimated < limit then
   cur = cur + 1
-  redis.call('HMSET', key, 'seg', curSeg, 'cur', cur, 'prev', prev)
-  redis.call('PEXPIRE', key, windowMs * 2)
-  local rem = math.max(0, limit - math.ceil(estimated + 1))
-  return {1, rem, limit, 0}
+  redis.call('HMSET', KEYS[1], 'seg', curSeg, 'cur', cur, 'prev', prev)
+  redis.call('PEXPIRE', KEYS[1], ARGV[5])
+  return {1, math.max(0, limit - math.ceil(estimated + 1)), limit, 0}
 end
-local retry = math.max(1, segmentMs - elapsed)
-redis.call('HMSET', key, 'seg', curSeg, 'cur', cur, 'prev', prev)
-redis.call('PEXPIRE', key, windowMs * 2)
-return {0, 0, limit, retry}
+if dirty then
+  redis.call('HMSET', KEYS[1], 'seg', curSeg, 'cur', cur, 'prev', prev)
+  redis.call('PEXPIRE', KEYS[1], ARGV[5])
+end
+return {0, 0, limit, math.max(1, segmentMs - elapsed)}

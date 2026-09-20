@@ -1,0 +1,60 @@
+# mdyaipay 网关限流 SLO — Prometheus Recording Rules
+# application 与 job 双匹配：兼容 scrape 注入标签与 Micrometer commonTags。
+groups:
+  - name: mdyaipay_ratelimit_slo
+    interval: 30s
+    rules:
+      - record: mdyaipay:gateway:http_requests:rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="mdyaipay-gateway"}[5m]))
+          or sum(rate(http_server_requests_seconds_count{job="mdyaipay-gateway"}[5m]))
+
+      - record: mdyaipay:gateway:http_5xx:rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="mdyaipay-gateway",status=~"5.."}[5m]))
+          or sum(rate(http_server_requests_seconds_count{job="mdyaipay-gateway",status=~"5.."}[5m]))
+
+      - record: mdyaipay:gateway:http_429:rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="mdyaipay-gateway",status="429"}[5m]))
+          or sum(rate(http_server_requests_seconds_count{job="mdyaipay-gateway",status="429"}[5m]))
+
+      - record: mdyaipay:gateway:http_ok_or_429:rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="mdyaipay-gateway",status=~"2..|429"}[5m]))
+          or sum(rate(http_server_requests_seconds_count{job="mdyaipay-gateway",status=~"2..|429"}[5m]))
+
+      - record: mdyaipay:gateway:http_5xx_ratio:rate5m
+        expr: |
+          mdyaipay:gateway:http_5xx:rate5m
+          /
+          clamp_min(mdyaipay:gateway:http_requests:rate5m, 1e-9)
+
+      - record: mdyaipay:ratelimit:decisions:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-gateway"}[5m])) by (rule_id, outcome)
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway"}[5m])) by (rule_id, outcome)
+
+      - record: mdyaipay:ratelimit:denied:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-gateway",outcome="denied"}[5m])) by (rule_id)
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway",outcome="denied"}[5m])) by (rule_id)
+
+      - record: mdyaipay:ratelimit:backend_error:rate5m
+        expr: |
+          sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-gateway",outcome="backend_error"}[5m]))
+          or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway",outcome="backend_error"}[5m]))
+
+      - record: mdyaipay:ratelimit:denied_ratio:rate5m
+        expr: |
+          (
+            sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-gateway",outcome="denied"}[5m]))
+            or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway",outcome="denied"}[5m]))
+          )
+          /
+          clamp_min(
+            (
+              sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-gateway",outcome=~"allowed|denied|backend_error"}[5m]))
+              or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-gateway",outcome=~"allowed|denied|backend_error"}[5m]))
+            ),
+            1e-9)

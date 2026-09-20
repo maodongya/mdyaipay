@@ -338,8 +338,8 @@ flowchart TB
 
 ---
 
-## 13. 待确认项
+## 13. 待确认项（已拍板）
 
-1. **Redis 地址**：是否与现有 `redis7` 容器（6379）作为本地默认 `uri`？
-2. **collect 默认阈值**：是否与压测 ~300 RPS 对齐（例如 300/s 令牌桶），还是留空由运维配置？
-3. **M1 是否立即开工**：确认后按 `writing-plans` 拆 tasks 实现。
+1. **Redis 地址**：本地默认 `redis://127.0.0.1:6379`（与现有 `redis7` 容器一致）；可用 `MDYAIPAY_RATELIMIT_REDIS_URI` 覆盖。
+2. **collect 默认频率**：与压测对齐为 **300/s 令牌桶**（gateway `application.yml` 规则 `gateway-collect`）。
+3. **实施**：M1–M4 已按 `docs/superpowers/plans/2026-09-20-ratelimit-m*-*.md` 落地；P2（滑动日志、漏桶、Dubbo Filter、动态规则）另议。

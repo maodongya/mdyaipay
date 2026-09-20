@@ -23,7 +23,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 /**
- * 网关 → payment：默认内网 HTTP（本地压测稳定）；未配置 {@code payment-base-url} 时走 Dubbo。
+ * 网关 → payment：默认 Dubbo；配置非空 {@code payment-base-url} 时 collect 可走内网 HTTP。
  */
 @Component
 public class PaymentGatewayClient {

@@ -38,12 +38,21 @@ public final class RedisScriptSupport {
     }
 
     /**
+     * 读取 Redis 服务器时钟（{@code TIME}），用于脚本参数预计算。
+     *
+     * @return 时刻快照
+     */
+    public RedisServerTime serverTime() {
+        return RedisServerTime.read(sync);
+    }
+
+    /**
      * 执行限流脚本。
      * <p>
      * 幂等：否——脚本可能修改 Redis 状态。
      *
      * @param script 脚本枚举
-     * @param key    Redis key
+     * @param key    Redis key（部分算法由 Java 拼好完整 key）
      * @param argv   脚本参数
      * @return 统一四元组
      */

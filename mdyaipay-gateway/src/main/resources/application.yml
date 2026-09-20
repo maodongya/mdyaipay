@@ -12,10 +12,74 @@ mdyaipay:
       log-on-complete: true
     dubbo:
       enabled: true
+  ratelimit:
+    enabled: ${MDYAIPAY_RATELIMIT_ENABLED:true}
+    backend: ${MDYAIPAY_RATELIMIT_BACKEND:redisson}
+    fail-open: ${MDYAIPAY_RATELIMIT_FAIL_OPEN:false}
+    redis:
+      uri: ${MDYAIPAY_RATELIMIT_REDIS_URI:redis://127.0.0.1:6379}
+      timeout: 200ms
+    dubbo:
+      enabled: true
+    default-policy:
+      algorithm: SLIDING_WINDOW_LOG
+      limit: 20
+      window: 1s
+    rules:
+      # 支付（收单）：全平台每路径 20 次/秒（滑动窗口日志）
+      - id: gateway-payment-collect
+        match:
+          path: /api/v1/payments/collect
+          methods: [POST]
+        policy:
+          algorithm: SLIDING_WINDOW_LOG
+          limit: 20
+          window: 1s
+        key-resolvers: [path]
+      # 代扣（POST /api/v1/withholds）；若口语「提现」指出款见 gateway-payout
+      - id: gateway-withhold
+        match:
+          path: /api/v1/withholds
+          methods: [POST]
+        policy:
+          algorithm: SLIDING_WINDOW_LOG
+          limit: 20
+          window: 1s
+        key-resolvers: [path]
+      # 代付 / 商户提现出款（POST /api/v1/payouts）
+      - id: gateway-payout
+        match:
+          path: /api/v1/payouts
+          methods: [POST]
+        policy:
+          algorithm: SLIDING_WINDOW_LOG
+          limit: 20
+          window: 1s
+        key-resolvers: [path]
+      # 调用 payment Dubbo：Consumer 侧 20/s（与 PaymentGatewayFacade 对齐）
+      - id: gateway-payment-facade-consumer
+        match:
+          dubbo-side: consumer
+          dubbo-service: com.mdyaipay.payment.api.gateway.PaymentGatewayFacade
+        policy:
+          algorithm: SLIDING_WINDOW_COUNTER
+          limit: 20
+          window: 1s
+        key-resolvers: [dubboService]
+      # 调用 user Dubbo：Consumer 侧 20/s（MerchantGatewayFacade 验签凭证）
+      - id: gateway-user-merchant-gateway-facade-consumer
+        match:
+          dubbo-side: consumer
+          dubbo-service: com.mdyaipay.user.api.merchant.gateway.MerchantGatewayFacade
+        policy:
+          algorithm: SLIDING_WINDOW_COUNTER
+          limit: 20
+          window: 1s
+        key-resolvers: [dubboService]
   gateway:
-    user-base-url: ${USER_BASE_URL:http://127.0.0.1:8082}
-    # 本地压测走 payment 内网 HTTP；生产留空并依赖 Dubbo
-    payment-base-url: ${PAYMENT_BASE_URL:http://127.0.0.1:8081}
+    user-base-url: ${USER_BASE_URL:}
+    # 留空则 gateway→payment 仅 Dubbo（Consumer 限流生效）；压测需 HTTP 时可设 PAYMENT_BASE_URL
+    payment-base-url: ${PAYMENT_BASE_URL:}
     payment-dubbo-url: ${PAYMENT_DUBBO_URL:}
 
 spring:
@@ -41,12 +105,21 @@ spring:
             allowedMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
             allowedHeaders: "*"
             allowCredentials: false
+      metrics:
+        enabled: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,gateway,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   endpoint:
     health:
       probes:

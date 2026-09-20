@@ -32,6 +32,14 @@
             <artifactId>mdyaipay-tools-mybatis-spring-boot</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-spring-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-tools-ratelimit-redisson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
             <exclusions>

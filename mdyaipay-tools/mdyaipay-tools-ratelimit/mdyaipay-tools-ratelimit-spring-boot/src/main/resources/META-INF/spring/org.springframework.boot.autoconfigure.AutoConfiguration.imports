@@ -1,0 +1,4 @@
+com.mdyaipay.tools.ratelimit.autoconfigure.RateLimitAutoConfiguration
+com.mdyaipay.tools.ratelimit.autoconfigure.RateLimitGatewayAutoConfiguration
+com.mdyaipay.tools.ratelimit.autoconfigure.RateLimitServletAutoConfiguration
+com.mdyaipay.tools.ratelimit.autoconfigure.RateLimitDubboAutoConfiguration

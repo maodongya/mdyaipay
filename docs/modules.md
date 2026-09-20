@@ -17,10 +17,15 @@
 | 公共（聚合） | `mdyaipay-tools-mybatis` | MyBatis 横切聚合 |
 | 公共 | `mdyaipay-tools-mybatis-spring-boot` | SQL 耗时拦截与 Spring Boot 自动配置 |
 | 公共（聚合） | `mdyaipay-tools-loadtest` | 压测工具聚合：core + HTTP/Dubbo/Spring Cloud 驱动 + CLI |
-| 公共（聚合） | `mdyaipay-tools-ratelimit` | 限流工具聚合：core + redis + spring-boot |
+| 公共（聚合） | `mdyaipay-tools-ratelimit` | 限流工具聚合：core + redis + redisson + spring-boot |
 | 公共 | `mdyaipay-tools-ratelimit-core` | 限流契约、策略模型、内存算法与键解析 SPI |
-| 公共 | `mdyaipay-tools-ratelimit-redis` | Redis + Lua 分布式限流驱动 |
+| 公共 | `mdyaipay-tools-ratelimit-redis` | Lettuce + Lua 分布式限流驱动 |
+| 公共 | `mdyaipay-tools-ratelimit-redisson` | Redisson 驱动（首版：滑动窗口日志） |
 | 公共 | `mdyaipay-tools-ratelimit-spring-boot` | Gateway/Servlet 自动配置与 429 响应 |
+| 文档 | [`docs/superpowers/specs/2026-09-21-ratelimit-monitoring-design.md`](superpowers/specs/2026-09-21-ratelimit-monitoring-design.md) | 限流与网关流量监控设计 |
+| 文档 | [`docs/monitoring/ratelimit-p1-prometheus.md`](monitoring/ratelimit-p1-prometheus.md) | M1：Prometheus 指标与 PromQL |
+| 文档 | [`docs/monitoring/ratelimit-p2.md`](monitoring/ratelimit-p2.md) | P2：Servlet 埋点、SkyWalking Tag、压测 status 分布 |
+| 文档 | [`docs/monitoring/ratelimit-p3.md`](monitoring/ratelimit-p3.md) | P3：Alertmanager 路由、SLO 规则、Grafana 看板模板 |
 | 公共 | `mdyaipay-tools-loadtest-core` | 压测引擎、动态指标、报告模型 |
 | 公共 | `mdyaipay-tools-loadtest-http` | HTTP/HTTPS 压测驱动 |
 | 公共 | `mdyaipay-tools-loadtest-dubbo` | Dubbo 泛化调用压测驱动 |
@@ -37,7 +42,7 @@
 
 ## 依赖关系（规划）
 
-典型调用链：`gateway` → `cashier` → `payment`；支付成功后异步或同步触发 `accounting` 入账，日终/批次由 `finance` 对账结算。`mdyaipay-tools-common-core` / `mdyaipay-tools-timetrace-core` 为无上游业务依赖的公共库，其他模块按需引入。当前代码仅为骨架与支付示例实现，模块间 Maven 依赖可按演进逐步引入，避免过早耦合。
+典型调用链：`gateway` → `cashier` → `payment`；支付成功后异步或同步触发 `accounting` 入账，日终/批次由 `finance` 对账结算。`mdyaipay-tools-common-core` / `mdyaipay-tools-timetrace-core` 为无上游业务依赖的公共库，其他模块按需引入。`mdyaipay-gateway` 引入 `mdyaipay-tools-ratelimit-spring-boot`（及 `ratelimit-redis`）：collect 默认令牌桶配置见 gateway `application.yml`（`mdyaipay.ratelimit.*`），算法与 Lua 在 tools，gateway 只装配。当前代码仅为骨架与支付示例实现，模块间 Maven 依赖可按演进逐步引入，避免过早耦合。
 
 ## 构建
 

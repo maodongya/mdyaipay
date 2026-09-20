@@ -1,30 +1,21 @@
--- 令牌桶：满桶突发，按速率补充；时钟取 Redis TIME。
--- KEYS[1]=hashKey  ARGV[1]=capacity  ARGV[2]=refillRatePerSecond
--- 返回 {allowed, remaining, limit, retryAfterMs}
-local t = redis.call('TIME')
-local nowMs = tonumber(t[1]) * 1000 + math.floor(tonumber(t[2]) / 1000)
+-- 令牌桶：KEYS[1]=hash  ARGV=capacity rate nowMs ttlMs
 local capacity = tonumber(ARGV[1])
 local rate = tonumber(ARGV[2])
-local key = KEYS[1]
-local tokens = tonumber(redis.call('HGET', key, 'tokens'))
-local ts = tonumber(redis.call('HGET', key, 'ts'))
-if tokens == nil then
-  tokens = capacity
-  ts = nowMs
+local nowMs = tonumber(ARGV[3])
+local h = redis.call('HMGET', KEYS[1], 'tokens', 'ts')
+local tokens = tonumber(h[1])
+if tokens then
+  tokens = math.min(capacity, tokens + math.max(0, nowMs - tonumber(h[2])) / 1000 * rate)
 else
-  local elapsed = math.max(0, nowMs - ts)
-  tokens = math.min(capacity, tokens + (elapsed / 1000.0) * rate)
-  ts = nowMs
+  tokens = capacity
 end
-local ttlMs = math.max(1000, math.ceil(capacity / rate * 2000))
+local allowed, rem, retry
 if tokens >= 1 then
   tokens = tokens - 1
-  redis.call('HMSET', key, 'tokens', tostring(tokens), 'ts', ts)
-  redis.call('PEXPIRE', key, ttlMs)
-  return {1, math.floor(tokens), capacity, 0}
+  allowed, rem, retry = 1, math.floor(tokens), 0
+else
+  allowed, rem, retry = 0, 0, math.max(1, math.ceil((1 - tokens) / rate * 1000))
 end
-local deficit = 1 - tokens
-local retry = math.max(1, math.ceil((deficit / rate) * 1000))
-redis.call('HMSET', key, 'tokens', tostring(tokens), 'ts', ts)
-redis.call('PEXPIRE', key, ttlMs)
-return {0, 0, capacity, retry}
+redis.call('HMSET', KEYS[1], 'tokens', tokens, 'ts', nowMs)
+redis.call('PEXPIRE', KEYS[1], ARGV[4])
+return {allowed, rem, capacity, retry}
