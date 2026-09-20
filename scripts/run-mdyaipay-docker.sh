@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# 本地 Docker：gateway / user / payment 各 2 节点 + Sentinel Dashboard（复用 mysql8、zk1）
+# 本地 Docker：gateway / user / payment 各 2 节点 + Sentinel（MySQL / Redis / ZK 在 K8s mdyaipay-infra）
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=mdyaipay-docker-lib.sh
 source "$ROOT/scripts/mdyaipay-docker-lib.sh"
+# shellcheck source=mdyaipay-k8s-lib.sh
+source "$ROOT/scripts/mdyaipay-k8s-lib.sh"
 COMPOSE_FILE="$ROOT/docker/services/docker-compose.yml"
 JAR_DIR="$ROOT/docker/services/jars"
 VERSION="${MDYAIPAY_VERSION:-1.0.0-SNAPSHOT}"
@@ -38,21 +40,35 @@ echo "==> mdyaipay Docker：gateway / user / payment 各 2 节点"
 
 mdyaipay_wait_docker || exit 1
 
-mysql_health="$(mdyaipay_container_health mysql8)"
-if [[ "$mysql_health" != healthy ]]; then
-  echo "mysql8 未就绪（当前: ${mysql_health}），请先启动 MySQL 容器" >&2
+if ! mdyaipay_k8s_require; then
   exit 1
 fi
-zk_health="$(mdyaipay_container_health zk1)"
-if [[ "$zk_health" != healthy ]]; then
-  echo "zk1 未就绪（当前: ${zk_health}），请先启动 ZooKeeper 容器" >&2
+if ! mdyaipay_wait_k8s_mysql_ready 30; then
+  echo "请先部署 K8s MySQL: ./scripts/apply-mdyaipay-mysql-k8s.sh 或迁移: ./scripts/migrate-mysql8-docker-to-k8s.sh" >&2
   exit 1
 fi
-echo "依赖就绪: mysql8、zk1"
-
-if ! nc -z 127.0.0.1 6379 2>/dev/null; then
-  echo "警告: 127.0.0.1:6379 无 Redis（请先启动 redis7 等），user/payment/gateway 会因 Redisson 连不上而退出" >&2
+PASSWORD="${MDYAIPAY_MYSQL_ROOT_PASSWORD:-123456}"
+if ! mdyaipay_wait_localhost_mysql 127.0.0.1 3306 "$PASSWORD" 15; then
+  echo "127.0.0.1:3306 MySQL 不可连（LoadBalancer 未就绪？）" >&2
+  exit 1
 fi
+if ! mdyaipay_wait_k8s_redis_ready 30; then
+  echo "请先部署 K8s Redis: ./scripts/apply-mdyaipay-redis-k8s.sh 或迁移: ./scripts/migrate-redis7-docker-to-k8s.sh" >&2
+  exit 1
+fi
+if ! mdyaipay_wait_localhost_redis 127.0.0.1 6379 15; then
+  echo "127.0.0.1:6379 Redis 不可连" >&2
+  exit 1
+fi
+if ! mdyaipay_wait_k8s_zookeeper_ready 3 30; then
+  echo "请先部署 K8s ZooKeeper: ./scripts/apply-mdyaipay-zookeeper-k8s.sh 或 ./scripts/migrate-zookeeper-docker-to-k8s.sh" >&2
+  exit 1
+fi
+if ! mdyaipay_wait_localhost_zookeeper 127.0.0.1 2181 15; then
+  echo "127.0.0.1:2181 ZooKeeper 未响应 ruok/imok" >&2
+  exit 1
+fi
+echo "依赖就绪: K8s mysql8、redis7、zookeeper（127.0.0.1:3306/6379/2181）"
 
 for legacy in "${MDYAIPAY_LEGACY_CONTAINERS[@]}"; do
   if mdyaipay_run_with_timeout 5 docker inspect "$legacy" >/dev/null 2>&1; then

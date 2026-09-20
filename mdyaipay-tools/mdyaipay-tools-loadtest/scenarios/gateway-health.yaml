@@ -12,7 +12,7 @@ metrics:
   recordErrors: true
   maxErrorSamples: 50
 target:
-  url: http://127.0.0.1:8041/health
+  url: http://127.0.0.1:8041/actuator/health
   method: GET
   headers:
     Accept: application/json

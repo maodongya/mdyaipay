@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-headless
+  labels:
+    app.kubernetes.io/name: zookeeper
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: client
+      port: 2181
+      targetPort: client
+    - name: quorum
+      port: 2888
+      targetPort: quorum
+    - name: election
+      port: 3888
+      targetPort: election
+  selector:
+    app.kubernetes.io/name: zookeeper
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  labels:
+    app.kubernetes.io/name: zookeeper
+  annotations:
+    mdyaipay.dev/exposure: docker-desktop-loadbalancer
+spec:
+  type: LoadBalancer
+  ports:
+    - name: client
+      port: 2181
+      targetPort: client
+  selector:
+    app.kubernetes.io/name: zookeeper

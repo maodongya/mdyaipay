@@ -1,5 +1,5 @@
-# 本地 Docker：user / payment / gateway 各 2 节点（复用 mysql8、zk1、本机 Redis 如 redis7:6379）
-# 限流 Redisson 默认连 host.docker.internal:6379（容器内 127.0.0.1 无 Redis 会启动失败）
+# 本地 Docker：user / payment / gateway 各 2 节点（MySQL / Redis / ZK 在 K8s mdyaipay-infra，经 host.docker.internal）
+# 限流 Redisson 默认连 host.docker.internal:6379
 # 每容器内存上限 512M（memswap 同限，避免撑 swap）；JVM 见 Dockerfile MaxRAMPercentage
 # 启动：scripts/run-mdyaipay-docker.sh
 name: mdyaipay
@@ -21,18 +21,16 @@ x-user-base: &user-base
   environment: &user-env-base
     MDYAIPAY_RATELIMIT_REDIS_URI: ${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://host.docker.internal:6379}
     USER_SERVER_PORT: "8082"
-    USER_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    USER_JDBC_URL: jdbc:mysql://host.docker.internal:3306/mdyaipay_user?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
     USER_JDBC_USER: root
     USER_JDBC_PASSWORD: "123456"
     USER_MQ_ENABLED: "false"
     DUBBO_PORT: "20882"
-    DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    DUBBO_REGISTRY_ADDRESS: zookeeper://host.docker.internal:2181
     SPRING_AUTOCONFIGURE_EXCLUDE: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
     MDYAIPAY_SENTINEL_DASHBOARD: sentinel-dashboard:8858
   networks:
     - default
-    - mysql
-    - zk
   healthcheck:
     test: ["CMD", "curl", "-sf", "http://127.0.0.1:8082/actuator/health"]
     interval: 5s
@@ -57,16 +55,14 @@ x-payment-base: &payment-base
   environment: &payment-env-base
     MDYAIPAY_RATELIMIT_REDIS_URI: ${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://host.docker.internal:6379}
     PAYMENT_SERVER_PORT: "8081"
-    PAYMENT_JDBC_URL: jdbc:mysql://mysql8:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    PAYMENT_JDBC_URL: jdbc:mysql://host.docker.internal:3306/mdyaipay_payment?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
     PAYMENT_JDBC_USER: root
     PAYMENT_JDBC_PASSWORD: "123456"
     DUBBO_PORT: "20881"
-    DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    DUBBO_REGISTRY_ADDRESS: zookeeper://host.docker.internal:2181
     MDYAIPAY_SENTINEL_DASHBOARD: sentinel-dashboard:8858
   networks:
     - default
-    - mysql
-    - zk
   healthcheck:
     test: ["CMD", "curl", "-sf", "http://127.0.0.1:8081/actuator/health"]
     interval: 5s
@@ -91,11 +87,10 @@ x-gateway-base: &gateway-base
   environment: &gateway-env-base
     MDYAIPAY_RATELIMIT_REDIS_URI: ${MDYAIPAY_RATELIMIT_REDIS_URI:-redis://host.docker.internal:6379}
     MDYAIPAY_GATEWAY_PORT: "8041"
-    DUBBO_REGISTRY_ADDRESS: zookeeper://zk1:2181
+    DUBBO_REGISTRY_ADDRESS: zookeeper://host.docker.internal:2181
     MDYAIPAY_SENTINEL_DASHBOARD: sentinel-dashboard:8858
   networks:
     - default
-    - zk
   healthcheck:
     test: ["CMD", "curl", "-sf", "http://127.0.0.1:8041/actuator/health"]
     interval: 5s
@@ -216,11 +211,3 @@ services:
         condition: service_healthy
       mdyaipay-payment-2:
         condition: service_healthy
-
-networks:
-  mysql:
-    external: true
-    name: mysql_default
-  zk:
-    external: true
-    name: zookeeper_zk-net

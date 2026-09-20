@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql8
+  namespace: mdyaipay-infra
+  labels:
+    app.kubernetes.io/name: mysql8
+    app.kubernetes.io/part-of: mdyaipay
+spec:
+  serviceName: mysql8-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mysql8
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mysql8
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql8-root
+                  key: MYSQL_ROOT_PASSWORD
+            - name: TZ
+              value: Asia/Shanghai
+          resources:
+            requests:
+              memory: 2Gi
+              cpu: 250m
+            limits:
+              memory: 2Gi
+              cpu: "2"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: mysqld-conf
+              mountPath: /etc/mysql/conf.d/99-mdyaipay.cnf
+              subPath: 99-mdyaipay.cnf
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - 'mysqladmin ping -h127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD"'
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - 'mysqladmin ping -h127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD"'
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+      volumes:
+        - name: mysqld-conf
+          configMap:
+            name: mysql8-mysqld-conf
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: mysql8
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: hostpath
+        resources:
+          requests:
+            storage: 20Gi

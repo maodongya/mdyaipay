@@ -1,0 +1,46 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    env: local
+
+rule_files:
+  - /etc/prometheus/rules/ratelimit-recording-rules.yaml
+  - /etc/prometheus/rules/ratelimit-alerts.yaml
+
+scrape_configs:
+  - job_name: mdyaipay-gateway
+    metrics_path: /actuator/prometheus
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets:
+          - mdyaipay-gateway-1.mdyaipay.svc.cluster.local:8041
+          - mdyaipay-gateway-2.mdyaipay.svc.cluster.local:8041
+        labels:
+          application: mdyaipay-gateway
+          env: local
+
+  - job_name: mdyaipay-user
+    metrics_path: /actuator/prometheus
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets:
+          - mdyaipay-user-1.mdyaipay.svc.cluster.local:8082
+          - mdyaipay-user-2.mdyaipay.svc.cluster.local:8082
+        labels:
+          application: mdyaipay-user
+          env: local
+
+  - job_name: mdyaipay-payment
+    metrics_path: /actuator/prometheus
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets:
+          - mdyaipay-payment-1.mdyaipay.svc.cluster.local:8081
+          - mdyaipay-payment-2.mdyaipay.svc.cluster.local:8081
+        labels:
+          application: mdyaipay-payment
+          env: local

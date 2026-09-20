@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zookeeper-env
+  labels:
+    app.kubernetes.io/name: zookeeper
+data:
+  ZOO_SERVERS: >-
+    server.1=zookeeper-0.zookeeper-headless.mdyaipay-infra.svc.cluster.local:2888:3888;2181
+    server.2=zookeeper-1.zookeeper-headless.mdyaipay-infra.svc.cluster.local:2888:3888;2181
+    server.3=zookeeper-2.zookeeper-headless.mdyaipay-infra.svc.cluster.local:2888:3888;2181
+  ZOO_4LW_COMMANDS_WHITELIST: ruok,stat,mntr,conf,cons
+  ZOO_ADMINSERVER_ENABLED: "false"
+  JVMFLAGS: -Xms64m -Xmx128m -XX:+UseSerialGC -XX:MaxMetaspaceSize=64m

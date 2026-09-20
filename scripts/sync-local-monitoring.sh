@@ -1,17 +1,27 @@
 #!/usr/bin/env bash
-# 将 mdyaipay 限流监控模板同步到本地 pay-settle 监控栈并 reload Prometheus。
+# 将 docs/monitoring 同步到 K8s 清单目录并 apply + Prometheus reload
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MON="${MONITORING_ROOT:-$ROOT/../../ai-pay-settle/docs/docker/monitoring}"
+# shellcheck source=mdyaipay-k8s-lib.sh
+source "$ROOT/scripts/mdyaipay-k8s-lib.sh"
+
+K8S_MON="$ROOT/kubernetes/infra/monitoring"
 MDY="$ROOT/docs/monitoring"
-if [[ ! -d "$MON" ]]; then
-  echo "未找到监控目录: $MON（可设 MONITORING_ROOT）" >&2
+
+mdyaipay_k8s_require || exit 1
+
+cp "$MDY/prometheus/ratelimit-recording-rules.yaml" "$K8S_MON/prometheus/rules/"
+cp "$MDY/prometheus/ratelimit-alerts.yaml" "$K8S_MON/prometheus/rules/"
+cp "$MDY/grafana/ratelimit-gateway-dashboard.json" "$K8S_MON/grafana/dashboards/ratelimit-gateway.json"
+
+echo "==> 应用 K8s 监控清单"
+kubectl apply -k "$K8S_MON"
+
+if curl -sf -X POST "http://127.0.0.1:9090/-/reload" >/dev/null 2>&1; then
+  echo "Prometheus 已 reload"
+else
+  echo "Prometheus 未响应 reload（若未部署: ./scripts/apply-mdyaipay-monitoring-k8s.sh）" >&2
   exit 1
 fi
-cp "$MDY/prometheus/ratelimit-recording-rules.yaml" "$MON/prometheus/mdyaipay-ratelimit-recording-rules.yaml"
-cp "$MDY/prometheus/ratelimit-alerts.yaml" "$MON/prometheus/mdyaipay-ratelimit-alerts.yaml"
-cp "$MDY/prometheus/scrape-config.example.yaml" "$MON/prometheus/mdyaipay-scrape-config.example.yaml"
-cp "$MDY/grafana/ratelimit-gateway-dashboard.json" "$MON/grafana/dashboards/mdyaipay-ratelimit-gateway.json"
-docker compose -f "$MON/docker-compose.yml" up -d prometheus grafana
-curl -sf -X POST http://127.0.0.1:9090/-/reload >/dev/null
-echo "已同步；Grafana: http://127.0.0.1:3000/d/mdyaipay-ratelimit-gateway"
+
+echo "Grafana: http://127.0.0.1:3000/d/mdyaipay-ratelimit-gateway"

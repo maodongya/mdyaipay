@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mdyaipay-infra
+
+resources:
+  - ../mysql/namespace.yaml
+  - ../mysql/configmap-mysqld.yaml
+  - ../mysql/service.yaml
+  - ../mysql/statefulset.yaml
+  - ../redis/service.yaml
+  - ../redis/statefulset.yaml
+  - zookeeper/configmap-env.yaml
+  - zookeeper/service.yaml
+  - zookeeper/statefulset.yaml
+  - monitoring

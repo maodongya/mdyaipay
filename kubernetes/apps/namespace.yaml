@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mdyaipay
+  labels:
+    app.kubernetes.io/part-of: mdyaipay
+    app.kubernetes.io/component: app
