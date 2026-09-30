@@ -61,6 +61,7 @@ kubectl create secret generic mdyaipay-jdbc \
   --namespace=mdyaipay \
   --from-literal=USER_JDBC_PASSWORD="$PASSWORD" \
   --from-literal=PAYMENT_JDBC_PASSWORD="$PASSWORD" \
+  --from-literal=ACCOUNTING_JDBC_PASSWORD="$PASSWORD" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 echo "apply 清单 ..."
@@ -71,6 +72,8 @@ rollout mdyaipay-user-1
 rollout mdyaipay-user-2
 rollout mdyaipay-payment-1
 rollout mdyaipay-payment-2
+rollout mdyaipay-accounting-1
+rollout mdyaipay-accounting-2
 rollout mdyaipay-gateway-1
 rollout mdyaipay-gateway-2
 
@@ -78,6 +81,8 @@ wait_health "http://127.0.0.1:8082/actuator/health" "user-1"
 wait_health "http://127.0.0.1:8083/actuator/health" "user-2"
 wait_health "http://127.0.0.1:8081/actuator/health" "payment-1"
 wait_health "http://127.0.0.1:8084/actuator/health" "payment-2"
+wait_health "http://127.0.0.1:8085/actuator/health" "accounting-1"
+wait_health "http://127.0.0.1:8086/actuator/health" "accounting-2"
 wait_health "http://127.0.0.1:8041/actuator/health" "gateway-1"
 wait_health "http://127.0.0.1:8042/actuator/health" "gateway-2"
 
@@ -89,6 +94,7 @@ fi
 echo ""
 echo "user     http://127.0.0.1:8082  http://127.0.0.1:8083"
 echo "payment  http://127.0.0.1:8081  http://127.0.0.1:8084"
+echo "account  http://127.0.0.1:8085  http://127.0.0.1:8086"
 echo "gateway  http://127.0.0.1:8041  http://127.0.0.1:8042"
 echo "sentinel http://127.0.0.1:8858  (sentinel / sentinel)"
 echo "停止: ./scripts/stop-mdyaipay-k8s.sh"

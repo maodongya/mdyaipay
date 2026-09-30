@@ -14,9 +14,9 @@ public class MockPaymentGateway implements PaymentGateway {
     @Override
     public PaymentSubmitResult pay(PaymentOrder order) {
         if (order.getProductType() == PaymentProductType.ONLINE_BANKING) {
-            return PaymentSubmitResult.AWAITING_CHANNEL_CONFIRMATION;
+            return PaymentSubmitResult.awaitingChannelConfirmation();
         }
         boolean ok = Math.abs(order.getOrderNo().hashCode()) % 10 < 8;
-        return ok ? PaymentSubmitResult.SYNC_SUCCESS : PaymentSubmitResult.SYNC_FAILURE;
+        return ok ? PaymentSubmitResult.syncSuccess("MOCK-" + order.getOrderNo()) : PaymentSubmitResult.syncFailure();
     }
 }

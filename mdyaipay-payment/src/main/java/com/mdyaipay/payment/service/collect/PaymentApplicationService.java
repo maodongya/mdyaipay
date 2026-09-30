@@ -6,6 +6,7 @@ import com.mdyaipay.payment.repository.PaymentOrderRepository;
 import com.mdyaipay.payment.domain.collect.PaymentProductType;
 import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
+import com.mdyaipay.payment.integration.accounting.PaymentCollectAccountingNotifier;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
 import com.mdyaipay.tools.timetrace.TimeTrace;
 
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -26,14 +29,17 @@ public class PaymentApplicationService {
     private final PaymentOrderRepository orderRepository;
     private final PaymentGateway paymentGateway;
     private final PaymentBusinessNoGenerator businessNoGenerator;
+    private final PaymentCollectAccountingNotifier accountingNotifier;
 
     public PaymentApplicationService(
             PaymentOrderRepository orderRepository,
             PaymentGateway paymentGateway,
-            PaymentBusinessNoGenerator businessNoGenerator) {
+            PaymentBusinessNoGenerator businessNoGenerator,
+            PaymentCollectAccountingNotifier accountingNotifier) {
         this.orderRepository = Objects.requireNonNull(orderRepository, "orderRepository must not be null");
         this.paymentGateway = Objects.requireNonNull(paymentGateway, "paymentGateway must not be null");
         this.businessNoGenerator = Objects.requireNonNull(businessNoGenerator, "businessNoGenerator must not be null");
+        this.accountingNotifier = Objects.requireNonNull(accountingNotifier, "accountingNotifier must not be null");
     }
 
     /** 快捷收单便捷入口，等价于 {@link PaymentProductType#QUICK_COLLECTION}。 */
@@ -76,8 +82,8 @@ public class PaymentApplicationService {
 
         try {
             PaymentSubmitResult result = paymentGateway.pay(order);
-            switch (result) {
-                case SYNC_SUCCESS -> order.markSuccess();
+            switch (result.kind()) {
+                case SYNC_SUCCESS -> order.markSuccess(result.channelTradeNo());
                 case SYNC_FAILURE -> order.markFailed();
                 case AWAITING_CHANNEL_CONFIRMATION -> {
                     /* 网银等：保持 PROCESSING，等待回调或查单确认 */
@@ -87,13 +93,16 @@ public class PaymentApplicationService {
             order.markFailed();
         }
 
-        return orderRepository.save(order);
+        PaymentOrder saved = orderRepository.save(order);
+        notifyAccountingIfSuccess(saved);
+        return saved;
     }
 
     /**
-     * 渠道异步确认（如网银支付结果通知）。仅允许 {@link PaymentProductType#ONLINE_BANKING} 且当前为 {@link PaymentStatus#PROCESSING} 的订单。
+     * 渠道异步确认（如网银支付结果通知）。成功时必须带渠道交易号。
+     * <p>前置：订单存在、产品为网银且当前为 PROCESSING。幂等：本方法不接受终态重入。</p>
      */
-    public PaymentOrder confirmChannelPayment(String orderNo, boolean success) {
+    public PaymentOrder confirmChannelPayment(String orderNo, boolean success, String channelTradeNo) {
         PaymentOrder order = orderRepository.findByOrderNo(orderNo)
                 .orElseThrow(() -> new IllegalArgumentException("order not found: " + orderNo));
         if (order.getProductType() != PaymentProductType.ONLINE_BANKING) {
@@ -103,11 +112,25 @@ public class PaymentApplicationService {
             throw new IllegalStateException("order not in PROCESSING: " + order.getStatus());
         }
         if (success) {
-            order.markSuccess();
+            order.markSuccess(channelTradeNo);
         } else {
             order.markFailed();
         }
-        return orderRepository.save(order);
+        PaymentOrder saved = orderRepository.save(order);
+        notifyAccountingIfSuccess(saved);
+        return saved;
+    }
+
+    /** SUCCESS 时通知账务入账（MQ 等）；失败不阻断支付主路径。 */
+    private void notifyAccountingIfSuccess(PaymentOrder order) {
+        if (order.getStatus() != PaymentStatus.SUCCESS) {
+            return;
+        }
+        try {
+            accountingNotifier.onCollectSuccess(order);
+        } catch (RuntimeException ex) {
+            /* 账务通知失败留待 MQ 重试或对账补偿，不在此回滚支付状态 */
+        }
     }
 
     /**
@@ -118,5 +141,20 @@ public class PaymentApplicationService {
     public PaymentOrder getPayment(String orderNo) {
         return orderRepository.findByOrderNo(orderNo)
                 .orElseThrow(() -> new IllegalArgumentException("order not found: " + orderNo));
+    }
+
+    /**
+     * 列出该渠道、该业务日已成功且带渠道交易号的收单。
+     * <p>业务日按 {@code updatedAt} 的 Asia/Shanghai 日历日。无副作用。</p>
+     */
+    @Transactional(readOnly = true)
+    public List<PaymentOrder> listCollectSuccess(String channel, LocalDate businessDate) {
+        if (channel == null || channel.isBlank()) {
+            throw new IllegalArgumentException("channel must not be blank");
+        }
+        if (businessDate == null) {
+            throw new IllegalArgumentException("businessDate must not be null");
+        }
+        return orderRepository.findCollectSuccess(channel, businessDate);
     }
 }

@@ -5,6 +5,8 @@ import com.mdyaipay.tools.ratelimit.match.RateLimitDubboRuleMatcher;
 import com.mdyaipay.tools.sentinel.dubbo.SentinelLocalDubboConsumerFilter;
 import com.mdyaipay.tools.sentinel.dubbo.SentinelLocalDubboFilterSupport;
 import com.mdyaipay.tools.sentinel.dubbo.SentinelLocalDubboProviderFilter;
+import com.mdyaipay.tools.sentinel.observe.SentinelLocalMetrics;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,8 +29,10 @@ public class SentinelDubboAutoConfiguration {
     SentinelLocalDubboFilterSupport sentinelLocalDubboFilterSupport(
             MdyaipaySentinelProperties sentinelProperties,
             RateLimitProperties rateLimitProperties,
-            RateLimitDubboRuleMatcher ruleMatcher) {
-        return new SentinelLocalDubboFilterSupport(sentinelProperties, rateLimitProperties, ruleMatcher);
+            RateLimitDubboRuleMatcher ruleMatcher,
+            ObjectProvider<SentinelLocalMetrics> metrics) {
+        return new SentinelLocalDubboFilterSupport(
+                sentinelProperties, rateLimitProperties, ruleMatcher, metrics.getIfAvailable());
     }
 
     /**

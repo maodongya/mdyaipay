@@ -20,6 +20,10 @@ import com.mdyaipay.tools.model.ApiResponse;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+
 /**
  * {@link PaymentGatewayFacade} Dubbo 实现：委托各应用服务编排，领域规则不在此类重复。
  * <p>不负责商户 Open API 验签解密（gateway 完成后再传入明文 Command）。</p>
@@ -61,7 +65,16 @@ public class PaymentGatewayFacadeImpl implements PaymentGatewayFacade {
     /** {@inheritDoc} */
     @Override
     public ApiResponse<PaymentOrderView> confirmChannelPayment(ChannelConfirmCommand command) {
-        return run(() -> toView(paymentService.confirmChannelPayment(command.getOrderNo(), command.isSuccess())));
+        return run(() -> toView(paymentService.confirmChannelPayment(
+                command.getOrderNo(), command.isSuccess(), command.getChannelTradeNo())));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ApiResponse<List<PaymentOrderView>> listCollectSuccess(String channel, String businessDate) {
+        return run(() -> paymentService.listCollectSuccess(channel, parseBusinessDate(businessDate)).stream()
+                .map(PaymentGatewayFacadeImpl::toView)
+                .toList());
     }
 
     /** {@inheritDoc} */
@@ -85,6 +98,13 @@ public class PaymentGatewayFacadeImpl implements PaymentGatewayFacade {
     }
 
     /** 空 productType 默认快捷收单，与 HTTP 时代行为一致。 */
+    private static LocalDate parseBusinessDate(String businessDate) {
+        if (businessDate == null || businessDate.isBlank()) {
+            throw new IllegalArgumentException("businessDate must not be blank");
+        }
+        return LocalDate.parse(businessDate);
+    }
+
     private static PaymentProductType parseProductType(String raw) {
         if (raw == null || raw.isBlank()) {
             return PaymentProductType.QUICK_COLLECTION;
@@ -98,6 +118,7 @@ public class PaymentGatewayFacadeImpl implements PaymentGatewayFacade {
                 order.getMerchantId(),
                 order.getAmount(),
                 order.getChannel(),
+                order.getChannelTradeNo(),
                 order.getProductType().name(),
                 order.getStatus().name(),
                 order.getCreatedAt(),
@@ -132,7 +153,7 @@ public class PaymentGatewayFacadeImpl implements PaymentGatewayFacade {
     private static <T> ApiResponse<T> run(Callable<T> action) {
         try {
             return ApiResponse.ok(action.call());
-        } catch (IllegalArgumentException | IllegalStateException ex) {
+        } catch (IllegalArgumentException | IllegalStateException | DateTimeParseException ex) {
             return ApiResponse.fail(ErrorCode.INVALID_PARAM.getCode(), ex.getMessage());
         } catch (Exception ex) {
             return ApiResponse.fail(ErrorCode.INTERNAL_ERROR.getCode(), ex.getMessage());

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nacos-data
+  labels:
+    app.kubernetes.io/name: nacos
+    app.kubernetes.io/part-of: mdyaipay
+    app.kubernetes.io/component: infra
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

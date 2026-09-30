@@ -138,11 +138,56 @@
           "refId": "A"
         }
       ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "id": 20,
+      "title": "Sentinel Dubbo 放行 QPS（resource = Dashboard 资源名）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "mdyaipay:sentinel:dubbo_passed:rate5m{job=\"$job\"} or sum(rate(mdyaipay_sentinel_entries_total{job=\"$job\",outcome=\"passed\",channel=~\"dubbo_.*\"}[$__rate_interval])) by (resource, channel)",
+          "legendFormat": "{{channel}} {{resource}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "id": 21,
+      "title": "Sentinel Dubbo 拒绝 QPS（blocked）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "mdyaipay:sentinel:dubbo_blocked:rate5m{job=\"$job\"} or sum(rate(mdyaipay_sentinel_entries_total{job=\"$job\",outcome=\"blocked\",channel=~\"dubbo_.*\"}[$__rate_interval])) by (resource, channel)",
+          "legendFormat": "{{channel}} {{resource}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 41 },
+      "id": 22,
+      "title": "Sentinel 全通道（http + dubbo）",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(mdyaipay_sentinel_entries_total{job=\"$job\"}[$__rate_interval])) by (outcome, channel, resource)",
+          "legendFormat": "{{outcome}} {{channel}} {{resource}}",
+          "refId": "A"
+        }
+      ]
     }
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["mdyaipay", "ratelimit", "gateway", "user", "payment"],
+  "tags": ["mdyaipay", "ratelimit", "sentinel", "gateway", "user", "payment"],
   "templating": {
     "list": [
       {
@@ -179,5 +224,5 @@
   "timezone": "browser",
   "title": "mdyaipay 限流与服务流量",
   "uid": "mdyaipay-ratelimit-gateway",
-  "version": 2
+  "version": 3
 }

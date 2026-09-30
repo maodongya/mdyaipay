@@ -79,6 +79,24 @@
         </dependency>
         <dependency>
             <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-accounting-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
+            <artifactId>mdyaipay-finance-gateway-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.github.aliyunmq</groupId>
+                    <artifactId>rocketmq-logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.mdyaipay</groupId>
             <artifactId>mdyaipay-tools-common-core</artifactId>
         </dependency>
         <dependency>

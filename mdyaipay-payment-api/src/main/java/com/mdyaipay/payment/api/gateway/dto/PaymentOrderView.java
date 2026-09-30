@@ -15,6 +15,7 @@ public final class PaymentOrderView implements Serializable {
     private final Long merchantId;
     private final long amount;
     private final String channel;
+    private final String channelTradeNo;
     private final String productType;
     private final String status;
     private final Instant createdAt;
@@ -26,6 +27,7 @@ public final class PaymentOrderView implements Serializable {
             @JsonProperty("merchantId") Long merchantId,
             @JsonProperty("amount") long amount,
             @JsonProperty("channel") String channel,
+            @JsonProperty("channelTradeNo") String channelTradeNo,
             @JsonProperty("productType") String productType,
             @JsonProperty("status") String status,
             @JsonProperty("createdAt") Instant createdAt,
@@ -34,6 +36,7 @@ public final class PaymentOrderView implements Serializable {
         this.merchantId = merchantId;
         this.amount = amount;
         this.channel = channel;
+        this.channelTradeNo = channelTradeNo;
         this.productType = productType;
         this.status = status;
         this.createdAt = createdAt;
@@ -54,6 +57,11 @@ public final class PaymentOrderView implements Serializable {
 
     public String getChannel() {
         return channel;
+    }
+
+    /** 渠道交易号；未成功时可能为空。 */
+    public String getChannelTradeNo() {
+        return channelTradeNo;
     }
 
     public String getProductType() {

@@ -7,6 +7,7 @@
 | MySQL 8 | `mysql8` | 3306 | [mysql8-docker-desktop.md](mysql8-docker-desktop.md) |
 | Redis 7 | `redis7` | 6379 | [redis7-docker-desktop.md](redis7-docker-desktop.md) |
 | ZooKeeper 3 节点 | `zookeeper` ×3 | 2181 | [zookeeper-docker-desktop.md](zookeeper-docker-desktop.md) |
+| Nacos standalone | `nacos` | 8848 | [../nacos/ratelimit-nacos.md](../nacos/ratelimit-nacos.md) |
 | Prometheus | `prometheus` | 9090 | [monitoring-docker-desktop.md](monitoring-docker-desktop.md) |
 | Grafana | `grafana` | 3000 | [monitoring-docker-desktop.md](monitoring-docker-desktop.md) |
 
@@ -32,6 +33,7 @@ kubectl apply -k kubernetes/infra        # 会 reconcile 已存在的 mysql/redi
 ./scripts/apply-mdyaipay-mysql-k8s.sh
 ./scripts/apply-mdyaipay-redis-k8s.sh
 ./scripts/apply-mdyaipay-zookeeper-k8s.sh
+./scripts/apply-mdyaipay-nacos-k8s.sh
 ./scripts/apply-mdyaipay-monitoring-k8s.sh
 ```
 

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nacos-env
+  labels:
+    app.kubernetes.io/name: nacos
+    app.kubernetes.io/part-of: mdyaipay
+    app.kubernetes.io/component: infra
+data:
+  MODE: standalone
+  PREFER_HOST_MODE: hostname
+  NACOS_AUTH_ENABLE: "false"
+  JVM_XMS: 256m
+  JVM_XMX: 256m
+  JVM_XMN: 128m

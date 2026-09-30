@@ -1,0 +1,25 @@
+# Grafana 看板：网关 5 分钟压测（health，无需商户凭证）
+# 看 collect 限流/Sentinel 请用 gateway-grafana-5m-collect.yaml + seed-loadtest-merchant
+name: gateway-grafana-5m
+protocol: http
+load:
+  threads: 40
+  durationSeconds: 300
+  rampUpSeconds: 15
+  thinkTimeMillis: 0
+  targetRps: null
+metrics:
+  percentiles: [0.5, 0.9, 0.95, 0.99]
+  warmupSeconds: 10
+  recordErrors: true
+  maxErrorSamples: 50
+target:
+  url: http://127.0.0.1:8041/actuator/health
+  method: GET
+  headers:
+    Accept: application/json
+  timeoutMillis: 5000
+  expectStatus: [200]
+report:
+  formats: [console, json, markdown]
+  outputDir: target/loadtest-reports

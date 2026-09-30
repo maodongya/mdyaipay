@@ -1,0 +1,31 @@
+server:
+  port: ${FINANCE_GATEWAY_SERVER_PORT:8087}
+
+spring:
+  application:
+    name: mdyaipay-finance-gateway
+
+finance-gateway:
+  channel-base-url: ${FINANCE_GATEWAY_CHANNEL_BASE_URL:http://127.0.0.1:8097}
+
+dubbo:
+  application:
+    name: mdyaipay-finance-gateway
+    qos-enable: false
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20887}
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
+  metrics:
+    enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  file:
+    name: logs/mdyaipay-finance-gateway.log

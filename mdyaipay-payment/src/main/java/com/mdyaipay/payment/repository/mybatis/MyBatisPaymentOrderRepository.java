@@ -1,5 +1,6 @@
 package com.mdyaipay.payment.repository.mybatis;
 
+import com.mdyaipay.payment.domain.collect.CollectBusinessDay;
 import com.mdyaipay.payment.domain.collect.PaymentOrder;
 import com.mdyaipay.payment.repository.PaymentOrderRepository;
 import com.mdyaipay.payment.domain.collect.PaymentProductType;
@@ -9,6 +10,8 @@ import com.mdyaipay.payment.repository.mybatis.row.PaymentOrderRow;
 import com.mdyaipay.tools.id.UuidV7Generator;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,6 +49,18 @@ public class MyBatisPaymentOrderRepository implements PaymentOrderRepository {
         return row == null ? Optional.empty() : Optional.of(fromRow(row));
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public List<PaymentOrder> findCollectSuccess(String channel, LocalDate businessDate) {
+        return paymentOrderMapper.findCollectSuccess(
+                        channel,
+                        CollectBusinessDay.startInclusive(businessDate),
+                        CollectBusinessDay.endExclusive(businessDate))
+                .stream()
+                .map(MyBatisPaymentOrderRepository::fromRow)
+                .toList();
+    }
+
     private static PaymentOrderRow toRow(byte[] id, PaymentOrder order) {
         return new PaymentOrderRow(
                 id,
@@ -53,6 +68,7 @@ public class MyBatisPaymentOrderRepository implements PaymentOrderRepository {
                 order.getMerchantId(),
                 order.getAmount(),
                 order.getChannel(),
+                order.getChannelTradeNo(),
                 order.getProductType().name(),
                 order.getStatus().name(),
                 order.getCreatedAt(),
@@ -66,6 +82,7 @@ public class MyBatisPaymentOrderRepository implements PaymentOrderRepository {
                 row.channel(),
                 PaymentProductType.valueOf(row.productType()),
                 row.merchantId(),
+                row.channelTradeNo(),
                 PaymentStatus.valueOf(row.status()),
                 row.createdAt(),
                 row.updatedAt());

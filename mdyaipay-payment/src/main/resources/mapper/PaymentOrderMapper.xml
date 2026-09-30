@@ -3,14 +3,24 @@
 <mapper namespace="com.mdyaipay.payment.repository.mybatis.mapper.PaymentOrderMapper">
 
     <insert id="upsert">
-        INSERT INTO payment_order (id, order_no, merchant_id, amount, channel, product_type, status, created_at, updated_at)
-        VALUES (#{id}, #{orderNo}, #{merchantId}, #{amount}, #{channel}, #{productType}, #{status}, #{createdAt}, #{updatedAt})
-        ON DUPLICATE KEY UPDATE status = VALUES(status), updated_at = VALUES(updated_at)
+        INSERT INTO payment_order (id, order_no, merchant_id, amount, channel, channel_trade_no, product_type, status, created_at, updated_at)
+        VALUES (#{id}, #{orderNo}, #{merchantId}, #{amount}, #{channel}, #{channelTradeNo}, #{productType}, #{status}, #{createdAt}, #{updatedAt})
+        ON DUPLICATE KEY UPDATE status = VALUES(status), channel_trade_no = VALUES(channel_trade_no), updated_at = VALUES(updated_at)
     </insert>
 
     <select id="findByOrderNo" resultType="com.mdyaipay.payment.repository.mybatis.row.PaymentOrderRow">
-        SELECT id, order_no, merchant_id, amount, channel, product_type, status, created_at, updated_at
+        SELECT id, order_no, merchant_id, amount, channel, channel_trade_no, product_type, status, created_at, updated_at
         FROM payment_order
         WHERE order_no = #{orderNo}
+    </select>
+
+    <select id="findCollectSuccess" resultType="com.mdyaipay.payment.repository.mybatis.row.PaymentOrderRow">
+        SELECT id, order_no, merchant_id, amount, channel, channel_trade_no, product_type, status, created_at, updated_at
+        FROM payment_order
+        WHERE channel = #{channel}
+          AND status = 'SUCCESS'
+          AND channel_trade_no IS NOT NULL
+          AND updated_at &gt;= #{start}
+          AND updated_at &lt; #{end}
     </select>
 </mapper>

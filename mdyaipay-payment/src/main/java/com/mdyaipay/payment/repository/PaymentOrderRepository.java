@@ -2,6 +2,8 @@ package com.mdyaipay.payment.repository;
 
 import com.mdyaipay.payment.domain.collect.PaymentOrder;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,4 +25,9 @@ public interface PaymentOrderRepository {
      * 按业务单号点查；无行时 empty。无副作用。
      */
     Optional<PaymentOrder> findByOrderNo(String orderNo);
+
+    /**
+     * 查询该渠道、该业务日状态为 SUCCESS 且已有渠道交易号的收单。无副作用。
+     */
+    List<PaymentOrder> findCollectSuccess(String channel, LocalDate businessDate);
 }

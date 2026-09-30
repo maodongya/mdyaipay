@@ -44,3 +44,15 @@ scrape_configs:
         labels:
           application: mdyaipay-payment
           env: local
+
+  - job_name: mdyaipay-accounting
+    metrics_path: /actuator/prometheus
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    static_configs:
+      - targets:
+          - mdyaipay-accounting-1.mdyaipay.svc.cluster.local:8083
+          - mdyaipay-accounting-2.mdyaipay.svc.cluster.local:8083
+        labels:
+          application: mdyaipay-accounting
+          env: local

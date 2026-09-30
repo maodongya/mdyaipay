@@ -13,4 +13,5 @@ resources:
   - zookeeper/configmap-env.yaml
   - zookeeper/service.yaml
   - zookeeper/statefulset.yaml
+  - nacos
   - monitoring

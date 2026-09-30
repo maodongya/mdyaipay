@@ -1,11 +1,5 @@
 package com.mdyaipay.payment.config;
 
-import com.mdyaipay.payment.gateway.PaymentGateway;
-import com.mdyaipay.payment.gateway.PayoutGateway;
-import com.mdyaipay.payment.gateway.WithholdGateway;
-import com.mdyaipay.payment.gateway.mock.MockPaymentGateway;
-import com.mdyaipay.payment.gateway.mock.MockPayoutGateway;
-import com.mdyaipay.payment.gateway.mock.MockWithholdGateway;
 import com.mdyaipay.payment.repository.mybatis.PaymentSchemaInitializer;
 import com.mdyaipay.tools.id.SnowflakeIdGenerator;
 import com.mdyaipay.tools.id.UuidV7Generator;
@@ -20,7 +14,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 
 /**
- * payment 模块 Spring 装配：Mock 渠道网关、MyBatis、雪花业务号 / UUIDv7 主键、可选 schema 初始化。
+ * payment 模块 Spring 装配：MyBatis、雪花业务号 / UUIDv7 主键、可选 schema 初始化（渠道见 {@link InProcessMockChannelConfiguration} 或 Dubbo）。
  * <p>
  * 启用声明式事务；隔离级别见 {@code spring.datasource.hikari.transaction-isolation}（READ COMMITTED）。
  */
@@ -48,18 +42,4 @@ public class PaymentConfiguration {
         return args -> PaymentSchemaInitializer.apply(dataSource, properties.getJdbc().isResetSchema());
     }
 
-    @Bean
-    PaymentGateway paymentGateway() {
-        return new MockPaymentGateway();
-    }
-
-    @Bean
-    WithholdGateway withholdGateway() {
-        return new MockWithholdGateway();
-    }
-
-    @Bean
-    PayoutGateway payoutGateway() {
-        return new MockPayoutGateway();
-    }
 }

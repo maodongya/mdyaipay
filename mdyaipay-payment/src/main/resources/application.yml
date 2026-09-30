@@ -78,6 +78,17 @@ payment:
   jdbc:
     init-schema: ${PAYMENT_JDBC_INIT_SCHEMA:true}
     reset-schema: ${PAYMENT_JDBC_RESET_SCHEMA:false}
+  accounting:
+    # dubbo：同步调 CollectAccountingFacade；mq：发 RocketMQ；none：不入账
+    channel: ${PAYMENT_ACCOUNTING_CHANNEL:dubbo}
+  channel:
+    # dubbo：经 FinanceChannelGatewayFacade；in-process-mock：本地 Mock
+    source: ${PAYMENT_CHANNEL_SOURCE:dubbo}
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESRV:127.0.0.1:9876}
+  producer:
+    group: mdyaipay-payment-producer
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml

@@ -8,4 +8,5 @@ resources:
   - sentinel.yaml
   - user.yaml
   - payment.yaml
+  - accounting.yaml
   - gateway.yaml

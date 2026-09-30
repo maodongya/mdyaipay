@@ -106,7 +106,8 @@ public class PaymentDubboGatewayFilter implements GlobalFilter, Ordered {
         if (confirm.matches() && HttpMethod.POST.name().equals(method)) {
             JsonNode root = body.isBlank() ? json.createObjectNode() : json.readTree(body);
             boolean success = root.has("success") && root.get("success").asBoolean();
-            return toBytes(paymentClient.confirmChannelPayment(new ChannelConfirmCommand(confirm.group(1), success)));
+            return toBytes(paymentClient.confirmChannelPayment(new ChannelConfirmCommand(
+                    confirm.group(1), success, optionalText(root, "channelTradeNo"))));
         }
         throw new IllegalArgumentException("unsupported payment path");
     }
@@ -129,6 +130,15 @@ public class PaymentDubboGatewayFilter implements GlobalFilter, Ordered {
             throw new IllegalArgumentException(response.getMessage());
         }
         return json.writeValueAsBytes(response.getData());
+    }
+
+    /** 字段缺失或空白时返回 null，不抛异常。 */
+    private static String optionalText(JsonNode root, String field) {
+        JsonNode node = root.get(field);
+        if (node == null || node.asText().isBlank()) {
+            return null;
+        }
+        return node.asText();
     }
 
     private static String text(JsonNode root, String field) {

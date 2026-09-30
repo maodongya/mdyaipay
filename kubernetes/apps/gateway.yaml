@@ -42,6 +42,10 @@ spec:
               value: sentinel-dashboard.mdyaipay.svc.cluster.local:8858
             - name: MDYAIPAY_SENTINEL_TRANSPORT_PORT
               value: "8719"
+            - name: USER_BASE_URL
+              value: http://mdyaipay-user-1.mdyaipay.svc.cluster.local:8082
+            - name: PAYMENT_BASE_URL
+              value: http://mdyaipay-payment-1.mdyaipay.svc.cluster.local:8081
           resources:
             requests:
               memory: 384Mi
@@ -124,6 +128,10 @@ spec:
               value: sentinel-dashboard.mdyaipay.svc.cluster.local:8858
             - name: MDYAIPAY_SENTINEL_TRANSPORT_PORT
               value: "8720"
+            - name: USER_BASE_URL
+              value: http://mdyaipay-user-2.mdyaipay.svc.cluster.local:8082
+            - name: PAYMENT_BASE_URL
+              value: http://mdyaipay-payment-2.mdyaipay.svc.cluster.local:8081
           resources:
             requests:
               memory: 384Mi

@@ -2,8 +2,8 @@
 # 内容为 mdyaipay.ratelimit 下的字段（不含前缀）
 enabled: true
 backend: redisson
-fail-open: false
-default-policy:
+failOpen: false
+defaultPolicy:
   algorithm: SLIDING_WINDOW_LOG
   limit: 20
   window: 1s

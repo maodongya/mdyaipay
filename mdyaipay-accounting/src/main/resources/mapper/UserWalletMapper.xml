@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mdyaipay.accounting.dao.wallet.mybatis.mapper.UserWalletMapper">
+
+    <insert id="insert">
+        INSERT INTO user_wallet (wallet_id, user_id, balance, frozen_amount, version, created_at, updated_at)
+        VALUES (#{walletId}, #{userId}, #{balance}, #{frozenAmount}, #{version}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="findByUserId" resultType="com.mdyaipay.accounting.dao.wallet.mybatis.row.UserWalletRow">
+        SELECT wallet_id, user_id, balance, frozen_amount, version, created_at, updated_at
+        FROM user_wallet
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateWithVersion">
+        UPDATE user_wallet
+        SET balance = #{balance},
+            frozen_amount = #{frozenAmount},
+            version = #{newVersion},
+            updated_at = #{updatedAt}
+        WHERE wallet_id = #{walletId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <select id="countTxnByBizKey" resultType="int">
+        SELECT COUNT(1) FROM wallet_txn_log WHERE biz_key = #{bizKey}
+    </select>
+
+    <insert id="insertTxn">
+        INSERT INTO wallet_txn_log (txn_id, wallet_id, entry_type, amount, biz_key, balance_after, frozen_after, created_at)
+        VALUES (#{txnId}, #{walletId}, #{entryType}, #{amount}, #{bizKey}, #{balanceAfter}, #{frozenAfter}, #{createdAt})
+    </insert>
+</mapper>

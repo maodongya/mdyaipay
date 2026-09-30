@@ -12,6 +12,7 @@ public class PaymentOrder {
     private final long amount;
     private final String channel;
     private final PaymentProductType productType;
+    private String channelTradeNo;
     private PaymentStatus status;
     private final Instant createdAt;
     private Instant updatedAt;
@@ -21,7 +22,7 @@ public class PaymentOrder {
     }
 
     public PaymentOrder(String orderNo, long amount, String channel, PaymentProductType productType, Long merchantId) {
-        this(orderNo, amount, channel, productType, merchantId, PaymentStatus.CREATED, Instant.now(), Instant.now());
+        this(orderNo, amount, channel, productType, merchantId, null, PaymentStatus.CREATED, Instant.now(), Instant.now());
     }
 
     private PaymentOrder(
@@ -30,12 +31,14 @@ public class PaymentOrder {
             String channel,
             PaymentProductType productType,
             Long merchantId,
+            String channelTradeNo,
             PaymentStatus status,
             Instant createdAt,
             Instant updatedAt) {
         this.orderNo = Objects.requireNonNull(orderNo, "orderNo must not be null");
         this.channel = Objects.requireNonNull(channel, "channel must not be null");
         this.productType = Objects.requireNonNull(productType, "productType must not be null");
+        this.channelTradeNo = channelTradeNo;
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.createdAt = Objects.requireNonNull(createdAt, "createdAt must not be null");
         this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt must not be null");
@@ -70,7 +73,22 @@ public class PaymentOrder {
             PaymentStatus status,
             Instant createdAt,
             Instant updatedAt) {
-        return new PaymentOrder(orderNo, amount, channel, productType, merchantId, status, createdAt, updatedAt);
+        return rehydrate(orderNo, amount, channel, productType, merchantId, null, status, createdAt, updatedAt);
+    }
+
+    /** 从持久化层重建聚合，含渠道交易号。 */
+    public static PaymentOrder rehydrate(
+            String orderNo,
+            long amount,
+            String channel,
+            PaymentProductType productType,
+            Long merchantId,
+            String channelTradeNo,
+            PaymentStatus status,
+            Instant createdAt,
+            Instant updatedAt) {
+        return new PaymentOrder(
+                orderNo, amount, channel, productType, merchantId, channelTradeNo, status, createdAt, updatedAt);
     }
 
     public Long getMerchantId() {
@@ -87,6 +105,11 @@ public class PaymentOrder {
 
     public String getChannel() {
         return channel;
+    }
+
+    /** 渠道交易号；未成功时为 null。 */
+    public String getChannelTradeNo() {
+        return channelTradeNo;
     }
 
     public PaymentProductType getProductType() {
@@ -111,8 +134,16 @@ public class PaymentOrder {
         this.updatedAt = Instant.now();
     }
 
-    public void markSuccess() {
+    /**
+     * 置为成功并记下渠道交易号。
+     * <p>前置：当前为 CREATED 或 PROCESSING，且 {@code channelTradeNo} 非空白。</p>
+     */
+    public void markSuccess(String channelTradeNo) {
+        if (channelTradeNo == null || channelTradeNo.isBlank()) {
+            throw new IllegalArgumentException("channelTradeNo must not be blank");
+        }
         assertState(PaymentStatus.CREATED, PaymentStatus.PROCESSING);
+        this.channelTradeNo = channelTradeNo;
         this.status = PaymentStatus.SUCCESS;
         this.updatedAt = Instant.now();
     }

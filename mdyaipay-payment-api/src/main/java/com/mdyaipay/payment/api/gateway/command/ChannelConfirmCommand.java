@@ -9,10 +9,19 @@ public final class ChannelConfirmCommand implements Serializable {
 
     private final String orderNo;
     private final boolean success;
+    private final String channelTradeNo;
 
     public ChannelConfirmCommand(String orderNo, boolean success) {
+        this(orderNo, success, null);
+    }
+
+    /**
+     * @param channelTradeNo 成功确认时的渠道交易号；失败可为 null
+     */
+    public ChannelConfirmCommand(String orderNo, boolean success, String channelTradeNo) {
         this.orderNo = orderNo;
         this.success = success;
+        this.channelTradeNo = channelTradeNo;
     }
 
     public String getOrderNo() {
@@ -21,5 +30,10 @@ public final class ChannelConfirmCommand implements Serializable {
 
     public boolean isSuccess() {
         return success;
+    }
+
+    /** 渠道交易号。 */
+    public String getChannelTradeNo() {
+        return channelTradeNo;
     }
 }

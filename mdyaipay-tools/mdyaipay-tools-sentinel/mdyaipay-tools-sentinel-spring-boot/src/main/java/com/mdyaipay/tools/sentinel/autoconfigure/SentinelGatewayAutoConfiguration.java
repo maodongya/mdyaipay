@@ -4,6 +4,8 @@ import com.mdyaipay.tools.ratelimit.autoconfigure.RateLimitProperties;
 import com.mdyaipay.tools.ratelimit.gateway.RateLimitDeniedWriter;
 import com.mdyaipay.tools.ratelimit.match.RateLimitRuleMatcher;
 import com.mdyaipay.tools.sentinel.gateway.SentinelLocalGatewayFilter;
+import com.mdyaipay.tools.sentinel.observe.SentinelLocalMetrics;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,7 +29,9 @@ public class SentinelGatewayAutoConfiguration {
             MdyaipaySentinelProperties sentinelProperties,
             RateLimitProperties rateLimitProperties,
             RateLimitRuleMatcher ruleMatcher,
-            RateLimitDeniedWriter deniedWriter) {
-        return new SentinelLocalGatewayFilter(sentinelProperties, rateLimitProperties, ruleMatcher, deniedWriter);
+            RateLimitDeniedWriter deniedWriter,
+            ObjectProvider<SentinelLocalMetrics> metrics) {
+        return new SentinelLocalGatewayFilter(
+                sentinelProperties, rateLimitProperties, ruleMatcher, deniedWriter, metrics.getIfAvailable());
     }
 }

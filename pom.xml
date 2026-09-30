@@ -15,8 +15,13 @@
         <module>mdyaipay-user-api</module>
         <module>mdyaipay-user</module>
         <module>mdyaipay-payment-api</module>
+        <module>mdyaipay-accounting-api</module>
         <module>mdyaipay-accounting</module>
+        <module>mdyaipay-finance-api</module>
         <module>mdyaipay-finance</module>
+        <module>mdyaipay-finance-gateway-api</module>
+        <module>mdyaipay-finance-gateway</module>
+        <module>mdyaipay-finance-mock</module>
         <module>mdyaipay-payment</module>
         <module>mdyaipay-gateway</module>
         <module>mdyaipay-cashier</module>
@@ -208,6 +213,21 @@
             <dependency>
                 <groupId>com.mdyaipay</groupId>
                 <artifactId>mdyaipay-payment-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-accounting-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-finance-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mdyaipay</groupId>
+                <artifactId>mdyaipay-finance-gateway-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -7,6 +7,7 @@ import com.mdyaipay.tools.ratelimit.autoconfigure.RateLimitProperties;
 import com.mdyaipay.tools.ratelimit.match.RateLimitDubboRuleMatcher;
 import com.mdyaipay.tools.sentinel.SentinelRuleNames;
 import com.mdyaipay.tools.sentinel.autoconfigure.MdyaipaySentinelProperties;
+import com.mdyaipay.tools.sentinel.observe.SentinelLocalMetrics;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.RpcException;
@@ -24,19 +25,23 @@ public final class SentinelLocalDubboFilterSupport {
     private final MdyaipaySentinelProperties sentinelProperties;
     private final RateLimitProperties rateLimitProperties;
     private final RateLimitDubboRuleMatcher ruleMatcher;
+    private final SentinelLocalMetrics metrics;
 
     /**
      * @param sentinelProperties Sentinel 配置
      * @param rateLimitProperties 规则来源
      * @param ruleMatcher Dubbo 规则匹配
+     * @param metrics Prometheus 埋点，可为 no-op
      */
     public SentinelLocalDubboFilterSupport(
             MdyaipaySentinelProperties sentinelProperties,
             RateLimitProperties rateLimitProperties,
-            RateLimitDubboRuleMatcher ruleMatcher) {
+            RateLimitDubboRuleMatcher ruleMatcher,
+            SentinelLocalMetrics metrics) {
         this.sentinelProperties = sentinelProperties;
         this.rateLimitProperties = rateLimitProperties;
         this.ruleMatcher = ruleMatcher;
+        this.metrics = metrics == null ? new SentinelLocalMetrics(null) : metrics;
     }
 
     /**
@@ -62,10 +67,19 @@ public final class SentinelLocalDubboFilterSupport {
             return;
         }
         String resource = SentinelRuleNames.localResource(ruleId);
+        String channel = channelForSide(side);
         try (Entry ignored = SphU.entry(resource)) {
-            // 允许：由 try-with-resources 自动 exit
+            metrics.record(resource, SentinelLocalMetrics.OUTCOME_PASSED, channel);
         } catch (BlockException ex) {
+            metrics.record(resource, SentinelLocalMetrics.OUTCOME_BLOCKED, channel);
             throw new RpcException(RPC_RATE_LIMITED, "Sentinel local rate limited: " + resource);
         }
+    }
+
+    private static String channelForSide(String side) {
+        if ("consumer".equalsIgnoreCase(side)) {
+            return SentinelLocalMetrics.CHANNEL_DUBBO_CONSUMER;
+        }
+        return SentinelLocalMetrics.CHANNEL_DUBBO_PROVIDER;
     }
 }

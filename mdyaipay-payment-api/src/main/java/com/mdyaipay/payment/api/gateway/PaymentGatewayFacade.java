@@ -9,6 +9,8 @@ import com.mdyaipay.payment.api.gateway.dto.PayoutOrderView;
 import com.mdyaipay.payment.api.gateway.dto.WithholdOrderView;
 import com.mdyaipay.tools.model.ApiResponse;
 
+import java.util.List;
+
 /**
  * 网关内网 Dubbo：收单/代扣/代付，替代 gateway→payment HTTP 转发。
  * <p>异常映射为 {@code ApiResponse.code != 0}，不抛业务异常到 Dubbo 边界。</p>
@@ -27,6 +29,12 @@ public interface PaymentGatewayFacade {
      * 渠道异步结果确认（如网银回调）。幂等：终态单重复确认不改变结果。
      */
     ApiResponse<PaymentOrderView> confirmChannelPayment(ChannelConfirmCommand command);
+
+    /**
+     * 按渠道与业务日列出收单成功单。{@code businessDate} 为 {@code yyyy-MM-dd}（Asia/Shanghai）。
+     * <p>只含 SUCCESS 且已有渠道交易号的收单。无副作用。</p>
+     */
+    ApiResponse<List<PaymentOrderView>> listCollectSuccess(String channel, String businessDate);
 
     /**
      * 代扣。幂等：{@code deductionNo} 已存在则返回已有单。

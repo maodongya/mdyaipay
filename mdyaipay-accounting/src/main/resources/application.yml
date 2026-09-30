@@ -1,0 +1,77 @@
+server:
+  port: ${ACCOUNTING_SERVER_PORT:8083}
+
+spring:
+  application:
+    name: mdyaipay-accounting
+  datasource:
+    url: ${ACCOUNTING_JDBC_URL:jdbc:mysql://127.0.0.1:3306/mdyaipay_accounting?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
+    username: ${ACCOUNTING_JDBC_USER:root}
+    password: ${ACCOUNTING_JDBC_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+accounting:
+  id:
+    worker-id: ${ACCOUNTING_ID_WORKER_ID:4}
+    datacenter-id: ${ACCOUNTING_ID_DATACENTER_ID:1}
+  jdbc:
+    init-schema: ${ACCOUNTING_JDBC_INIT_SCHEMA:true}
+    reset-schema: ${ACCOUNTING_JDBC_RESET_SCHEMA:false}
+  mq:
+    enabled: ${ACCOUNTING_MQ_ENABLED:false}
+    payment-collect-consumer-group: mdyaipay-accounting-payment-collect
+
+mdyaipay:
+  sentinel:
+    enabled: ${MDYAIPAY_SENTINEL_ENABLED:true}
+    dashboard: ${MDYAIPAY_SENTINEL_DASHBOARD:127.0.0.1:8858}
+    transport-port: ${MDYAIPAY_SENTINEL_TRANSPORT_PORT:8719}
+  trace:
+    dubbo:
+      enabled: true
+  mybatis:
+    sql-perf:
+      enabled: true
+      slow-threshold-millis: 0
+      include-trace-id: true
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+dubbo:
+  application:
+    name: mdyaipay-accounting
+    qos-enable: false
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20883}
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
+  metrics:
+    enable: true
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESRV:127.0.0.1:9876}
+
+logging:
+  file:
+    name: logs/mdyaipay-accounting.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true

@@ -54,6 +54,17 @@ groups:
           description: |
             :8081/actuator/prometheus 不可达或 payment 未启动；Dubbo Provider 限流指标会缺失。
 
+      - alert: MdyaipayAccountingScrapeDown
+        expr: up{job="mdyaipay-accounting"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: accounting
+        annotations:
+          summary: "Prometheus 无法采集 mdyaipay-accounting"
+          description: |
+            :8083/actuator/prometheus 不可达或 accounting 未启动；钱包 Dubbo Provider 指标会缺失。
+
       - alert: MdyaipayGatewayScrapeDown
         expr: up{job="mdyaipay-gateway"} == 0
         for: 2m

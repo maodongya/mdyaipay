@@ -207,6 +207,52 @@ mdyaipay_wait_localhost_zookeeper() {
   return 1
 }
 
+MDYAIPAY_K8S_NACOS_DEPLOYMENT="${MDYAIPAY_K8S_NACOS_DEPLOYMENT:-nacos}"
+MDYAIPAY_K8S_NACOS_NAMESPACE="${MDYAIPAY_K8S_NACOS_NAMESPACE:-$MDYAIPAY_K8S_INFRA_NAMESPACE}"
+
+mdyaipay_k8s_nacos_ready() {
+  local ready
+  ready="$(kubectl get deploy "$MDYAIPAY_K8S_NACOS_DEPLOYMENT" -n "$MDYAIPAY_K8S_NACOS_NAMESPACE" \
+    -o jsonpath='{.status.readyReplicas}' 2>/dev/null)"
+  if [[ "$ready" == "1" ]]; then
+    echo "ready"
+    return 0
+  fi
+  echo "not-ready"
+  return 1
+}
+
+mdyaipay_wait_k8s_nacos_ready() {
+  local attempts="${1:-90}"
+  local i=1
+  while (( i <= attempts )); do
+    if mdyaipay_k8s_nacos_ready >/dev/null; then
+      echo "K8s Nacos 已 Ready"
+      return 0
+    fi
+    sleep 3
+    i=$((i + 1))
+  done
+  echo "K8s Nacos 未在预期时间内 Ready（namespace=$MDYAIPAY_K8S_NACOS_NAMESPACE）" >&2
+  kubectl get deploy,pod,svc -n "$MDYAIPAY_K8S_NACOS_NAMESPACE" -l app.kubernetes.io/name=nacos 2>&1 || true
+  return 1
+}
+
+mdyaipay_wait_localhost_nacos() {
+  local host="${1:-127.0.0.1}"
+  local port="${2:-8848}"
+  local attempts="${3:-60}"
+  local i=1
+  while (( i <= attempts )); do
+    if curl -sf "http://${host}:${port}/nacos/v1/console/health/readiness" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+    i=$((i + 1))
+  done
+  return 1
+}
+
 mdyaipay_wait_k8s_monitoring_ready() {
   local attempts="${1:-90}"
   local i=1

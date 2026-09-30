@@ -1,0 +1,16 @@
+server:
+  port: ${FINANCE_MOCK_SERVER_PORT:8097}
+
+spring:
+  application:
+    name: mdyaipay-finance-mock
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  file:
+    name: logs/mdyaipay-finance-mock.log

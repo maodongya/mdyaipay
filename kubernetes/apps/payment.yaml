@@ -32,6 +32,10 @@ spec:
           env:
             - name: MDYAIPAY_RATELIMIT_REDIS_URI
               value: redis://redis7.mdyaipay-infra.svc.cluster.local:6379
+            - name: MDYAIPAY_RATELIMIT_NACOS_ENABLED
+              value: "true"
+            - name: NACOS_SERVER_ADDR
+              value: nacos.mdyaipay-infra.svc.cluster.local:8848
             - name: PAYMENT_SERVER_PORT
               value: "8081"
             - name: PAYMENT_JDBC_URL
@@ -59,6 +63,10 @@ spec:
               value: sentinel-dashboard.mdyaipay.svc.cluster.local:8858
             - name: PAYMENT_ID_WORKER_ID
               value: "2"
+            - name: PAYMENT_ACCOUNTING_CHANNEL
+              value: "dubbo"
+            - name: SPRING_AUTOCONFIGURE_EXCLUDE
+              value: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
             - name: MDYAIPAY_SENTINEL_TRANSPORT_PORT
               value: "8723"
           resources:
@@ -136,6 +144,10 @@ spec:
           env:
             - name: MDYAIPAY_RATELIMIT_REDIS_URI
               value: redis://redis7.mdyaipay-infra.svc.cluster.local:6379
+            - name: MDYAIPAY_RATELIMIT_NACOS_ENABLED
+              value: "true"
+            - name: NACOS_SERVER_ADDR
+              value: nacos.mdyaipay-infra.svc.cluster.local:8848
             - name: PAYMENT_SERVER_PORT
               value: "8081"
             - name: PAYMENT_JDBC_URL
@@ -163,6 +175,10 @@ spec:
               value: sentinel-dashboard.mdyaipay.svc.cluster.local:8858
             - name: PAYMENT_ID_WORKER_ID
               value: "5"
+            - name: PAYMENT_ACCOUNTING_CHANNEL
+              value: "dubbo"
+            - name: SPRING_AUTOCONFIGURE_EXCLUDE
+              value: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
             - name: MDYAIPAY_SENTINEL_TRANSPORT_PORT
               value: "8724"
           resources:

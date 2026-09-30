@@ -37,15 +37,19 @@
 | 用户 API | `mdyaipay-user-api` | Dubbo Facade 与 DTO（无实现依赖） |
 | 支付 API | `mdyaipay-payment-api` | 网关内网 Dubbo Facade（收单/代扣/代付） |
 | 用户 | `mdyaipay-user` | 会员/商户主体、认证会话、权限模型；商户开放 API 验签 |
-| 账务 | `mdyaipay-accounting` | 账户分录、余额、冻结与入账一致性 |
+| 账务 API | `mdyaipay-accounting-api` | Dubbo Facade（用户/商户钱包）、MQ 契约 `PaymentCollectSettledMessage` |
+| 账务 | `mdyaipay-accounting` | 钱包分录、乐观锁余额、消费收单成功 MQ 写商户待结算 |
 | 财务 | `mdyaipay-finance` | 结算、对账、差异处理与报表口径 |
-| 支付 | `mdyaipay-payment` | 收单（快捷/网银）、代扣、代付等领域模型、应用编排与渠道网关抽象 |
+| 渠道网关 API | `mdyaipay-finance-gateway-api` | `FinanceChannelGatewayFacade` 与收单/代扣/代付渠道 DTO |
+| 渠道网关 | `mdyaipay-finance-gateway` | Dubbo 对外，HTTP 调银行或 finance-mock |
+| 渠道 Mock | `mdyaipay-finance-mock` | 模拟第三方/银行 HTTP（联调与单测环境） |
+| 支付 | `mdyaipay-payment` | 收单（快捷/网银）、代扣、代付等领域模型、应用编排；渠道经 Dubbo 调 finance-gateway |
 | 网关 | `mdyaipay-gateway` | 对外接入：路由、鉴权、限流（流量「网管」） |
 | 收银台 | `mdyaipay-cashier` | 收银台会话、支付方式选择与调用支付核心 |
 
 ## 依赖关系（规划）
 
-典型调用链：`gateway` → `cashier` → `payment`；支付成功后异步或同步触发 `accounting` 入账，日终/批次由 `finance` 对账结算。`mdyaipay-tools-common-core` / `mdyaipay-tools-timetrace-core` 为无上游业务依赖的公共库，其他模块按需引入。`mdyaipay-gateway` 引入 `mdyaipay-tools-ratelimit-spring-boot`（及 `ratelimit-redis`）：collect 默认令牌桶配置见 gateway `application.yml`（`mdyaipay.ratelimit.*`），算法与 Lua 在 tools，gateway 只装配。当前代码仅为骨架与支付示例实现，模块间 Maven 依赖可按演进逐步引入，避免过早耦合。
+典型调用链：`gateway` → `cashier` → `payment`；支付成功后 payment 经 Dubbo `CollectAccountingFacade` 驱动 `accounting` 商户待结算入账（可选 MQ），日终/批次由 `finance` 对账结算。`mdyaipay-tools-common-core` / `mdyaipay-tools-timetrace-core` 为无上游业务依赖的公共库，其他模块按需引入。`mdyaipay-gateway` 引入 `mdyaipay-tools-ratelimit-spring-boot`（及 `ratelimit-redis`）：collect 默认令牌桶配置见 gateway `application.yml`（`mdyaipay.ratelimit.*`），算法与 Lua 在 tools，gateway 只装配。当前代码仅为骨架与支付示例实现，模块间 Maven 依赖可按演进逐步引入，避免过早耦合。
 
 ## 构建
 

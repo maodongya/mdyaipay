@@ -12,6 +12,7 @@ public record PaymentOrderRow(
         Long merchantId,
         long amount,
         String channel,
+        String channelTradeNo,
         String productType,
         String status,
         Instant createdAt,

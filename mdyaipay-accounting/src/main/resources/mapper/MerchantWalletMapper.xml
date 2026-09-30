@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mdyaipay.accounting.dao.wallet.mybatis.mapper.MerchantWalletMapper">
+
+    <insert id="insert">
+        INSERT INTO merchant_wallet (
+            wallet_id, merchant_id, available_amount, pending_settle_amount, withdrawable_amount,
+            version, created_at, updated_at)
+        VALUES (
+            #{walletId}, #{merchantId}, #{availableAmount}, #{pendingSettleAmount}, #{withdrawableAmount},
+            #{version}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="findByMerchantId" resultType="com.mdyaipay.accounting.dao.wallet.mybatis.row.MerchantWalletRow">
+        SELECT wallet_id, merchant_id, available_amount, pending_settle_amount, withdrawable_amount,
+               version, created_at, updated_at
+        FROM merchant_wallet
+        WHERE merchant_id = #{merchantId}
+    </select>
+
+    <update id="updateWithVersion">
+        UPDATE merchant_wallet
+        SET available_amount = #{availableAmount},
+            pending_settle_amount = #{pendingSettleAmount},
+            withdrawable_amount = #{withdrawableAmount},
+            version = #{newVersion},
+            updated_at = #{updatedAt}
+        WHERE wallet_id = #{walletId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <select id="countTxnByBizKey" resultType="int">
+        SELECT COUNT(1) FROM merchant_wallet_txn_log WHERE biz_key = #{bizKey}
+    </select>
+
+    <insert id="insertTxn">
+        INSERT INTO merchant_wallet_txn_log (
+            txn_id, wallet_id, entry_type, amount, biz_key,
+            available_after, pending_settle_after, withdrawable_after, created_at)
+        VALUES (
+            #{txnId}, #{walletId}, #{entryType}, #{amount}, #{bizKey},
+            #{availableAfter}, #{pendingSettleAfter}, #{withdrawableAfter}, #{createdAt})
+    </insert>
+</mapper>

@@ -11,6 +11,7 @@ import com.mdyaipay.tools.ratelimit.gateway.RateLimitDeniedWriter;
 import com.mdyaipay.tools.ratelimit.match.RateLimitRuleMatcher;
 import com.mdyaipay.tools.sentinel.SentinelRuleNames;
 import com.mdyaipay.tools.sentinel.autoconfigure.MdyaipaySentinelProperties;
+import com.mdyaipay.tools.sentinel.observe.SentinelLocalMetrics;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -30,22 +31,26 @@ public final class SentinelLocalGatewayFilter implements GlobalFilter, Ordered {
     private final RateLimitProperties rateLimitProperties;
     private final RateLimitRuleMatcher ruleMatcher;
     private final RateLimitDeniedWriter deniedWriter;
+    private final SentinelLocalMetrics metrics;
 
     /**
      * @param sentinelProperties Sentinel 开关
      * @param rateLimitProperties 规则匹配来源
      * @param ruleMatcher HTTP 规则匹配
      * @param deniedWriter 429 响应
+     * @param metrics Sentinel Prometheus 埋点
      */
     public SentinelLocalGatewayFilter(
             MdyaipaySentinelProperties sentinelProperties,
             RateLimitProperties rateLimitProperties,
             RateLimitRuleMatcher ruleMatcher,
-            RateLimitDeniedWriter deniedWriter) {
+            RateLimitDeniedWriter deniedWriter,
+            SentinelLocalMetrics metrics) {
         this.sentinelProperties = sentinelProperties;
         this.rateLimitProperties = rateLimitProperties;
         this.ruleMatcher = ruleMatcher;
         this.deniedWriter = deniedWriter;
+        this.metrics = metrics == null ? new SentinelLocalMetrics(null) : metrics;
     }
 
     /**
@@ -70,8 +75,12 @@ public final class SentinelLocalGatewayFilter implements GlobalFilter, Ordered {
         }
         String resource = SentinelRuleNames.localResource(ruleId);
         return Mono.fromCallable(() -> SphU.entry(resource))
-                .flatMap(entry -> chain.filter(exchange).doFinally(signal -> entry.exit()))
+                .flatMap(entry -> {
+                    metrics.record(resource, SentinelLocalMetrics.OUTCOME_PASSED, SentinelLocalMetrics.CHANNEL_HTTP);
+                    return chain.filter(exchange).doFinally(signal -> entry.exit());
+                })
                 .onErrorResume(BlockException.class, ex -> {
+                    metrics.record(resource, SentinelLocalMetrics.OUTCOME_BLOCKED, SentinelLocalMetrics.CHANNEL_HTTP);
                     RateLimitPolicy policy = RateLimitPolicyFactory.merge(
                             matched.get().getPolicy(), rateLimitProperties.getDefaultPolicy());
                     RateLimitDecision decision = new RateLimitDecision(

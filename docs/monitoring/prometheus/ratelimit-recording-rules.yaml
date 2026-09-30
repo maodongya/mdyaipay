@@ -104,3 +104,21 @@ groups:
         expr: |
           sum(rate(mdyaipay_ratelimit_decisions_total{application="mdyaipay-payment",outcome="backend_error"}[5m]))
           or sum(rate(mdyaipay_ratelimit_decisions_total{job="mdyaipay-payment",outcome="backend_error"}[5m]))
+
+  - name: mdyaipay_sentinel_local
+    interval: 30s
+    rules:
+      - record: mdyaipay:sentinel:entries:rate5m
+        expr: |
+          sum(rate(mdyaipay_sentinel_entries_total[5m])) by (application, job, resource, outcome, channel)
+          or sum(rate(mdyaipay_sentinel_entries_total[5m])) by (job, resource, outcome, channel)
+
+      - record: mdyaipay:sentinel:dubbo_blocked:rate5m
+        expr: |
+          sum(rate(mdyaipay_sentinel_entries_total{outcome="blocked",channel=~"dubbo_.*"}[5m])) by (application, job, resource, channel)
+          or sum(rate(mdyaipay_sentinel_entries_total{outcome="blocked",channel=~"dubbo_.*"}[5m])) by (job, resource, channel)
+
+      - record: mdyaipay:sentinel:dubbo_passed:rate5m
+        expr: |
+          sum(rate(mdyaipay_sentinel_entries_total{outcome="passed",channel=~"dubbo_.*"}[5m])) by (application, job, resource, channel)
+          or sum(rate(mdyaipay_sentinel_entries_total{outcome="passed",channel=~"dubbo_.*"}[5m])) by (job, resource, channel)

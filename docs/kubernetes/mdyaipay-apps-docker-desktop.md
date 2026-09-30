@@ -1,6 +1,6 @@
 # mdyaipay 业务栈（Docker Desktop Kubernetes）
 
-命名空间 **`mdyaipay`**：Sentinel Dashboard + user / payment / gateway **各 2 节点**。  
+命名空间 **`mdyaipay`**：Sentinel Dashboard + user / payment / accounting / gateway **各 2 节点**（账务见 [mdyaipay-accounting-k8s.md](mdyaipay-accounting-k8s.md)）。  
 基础设施在 **`mdyaipay-infra`**（见 [mdyaipay-infra-group.md](mdyaipay-infra-group.md)）。
 
 ## 部署
@@ -24,6 +24,7 @@ MDYAIPAY_SKIP_BUILD=true ./scripts/run-mdyaipay-k8s.sh   # 跳过构建
 | Gateway | http://127.0.0.1:8041 、8042 |
 | User | http://127.0.0.1:8082 、8083 |
 | Payment | http://127.0.0.1:8081 、8084 |
+| Accounting | http://127.0.0.1:8085 、8086 |
 | Sentinel | http://127.0.0.1:8858 |
 
 ## 集群内 DNS
@@ -55,6 +56,7 @@ kubernetes/apps/
   sentinel.yaml
   user.yaml
   payment.yaml
+  accounting.yaml
   gateway.yaml
   kustomization.yaml
 ```

@@ -1,6 +1,6 @@
 enabled: true
 backend: redisson
-default-policy:
+defaultPolicy:
   algorithm: SLIDING_WINDOW_COUNTER
   limit: 20
   window: 1s
