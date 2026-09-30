@@ -8,13 +8,16 @@ mdyaipay_build_app_images() {
   local sentinel_jar_dir="$root/docker/sentinel/jars"
   local sentinel_ver="${SENTINEL_DASHBOARD_VERSION:-1.8.8}"
 
-  echo "package user / payment / accounting / gateway ..."
-  mvn -f "$root/pom.xml" -pl mdyaipay-user,mdyaipay-payment,mdyaipay-accounting,mdyaipay-gateway -am package -DskipTests
+  echo "package user / payment / accounting / finance* / gateway ..."
+  mvn -f "$root/pom.xml" -pl mdyaipay-user,mdyaipay-payment,mdyaipay-accounting,mdyaipay-finance,mdyaipay-finance-gateway,mdyaipay-finance-mock,mdyaipay-gateway -am package -DskipTests
 
   mkdir -p "$jar_dir"
   cp "$root/mdyaipay-user/target/mdyaipay-user-${version}-boot.jar" "$jar_dir/user.jar"
   cp "$root/mdyaipay-payment/target/mdyaipay-payment-${version}-boot.jar" "$jar_dir/payment.jar"
   cp "$root/mdyaipay-accounting/target/mdyaipay-accounting-${version}-boot.jar" "$jar_dir/accounting.jar"
+  cp "$root/mdyaipay-finance/target/mdyaipay-finance-${version}-boot.jar" "$jar_dir/finance.jar"
+  cp "$root/mdyaipay-finance-gateway/target/mdyaipay-finance-gateway-${version}-boot.jar" "$jar_dir/finance-gateway.jar"
+  cp "$root/mdyaipay-finance-mock/target/mdyaipay-finance-mock-${version}-boot.jar" "$jar_dir/finance-mock.jar"
   cp "$root/mdyaipay-gateway/target/mdyaipay-gateway-${version}-boot.jar" "$jar_dir/gateway.jar"
 
   echo "docker build 应用镜像 ..."
@@ -27,6 +30,15 @@ mdyaipay_build_app_images() {
   docker build -f "$root/docker/services/Dockerfile" \
     --build-arg APP_JAR=jars/accounting.jar \
     -t mdyaipay-accounting:local "$root/docker/services"
+  docker build -f "$root/docker/services/Dockerfile" \
+    --build-arg APP_JAR=jars/finance.jar \
+    -t mdyaipay-finance:local "$root/docker/services"
+  docker build -f "$root/docker/services/Dockerfile" \
+    --build-arg APP_JAR=jars/finance-gateway.jar \
+    -t mdyaipay-finance-gateway:local "$root/docker/services"
+  docker build -f "$root/docker/services/Dockerfile" \
+    --build-arg APP_JAR=jars/finance-mock.jar \
+    -t mdyaipay-finance-mock:local "$root/docker/services"
   docker build -f "$root/docker/services/Dockerfile" \
     --build-arg APP_JAR=jars/gateway.jar \
     -t mdyaipay-gateway:local "$root/docker/services"

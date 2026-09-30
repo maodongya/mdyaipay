@@ -62,12 +62,19 @@ kubectl create secret generic mdyaipay-jdbc \
   --from-literal=USER_JDBC_PASSWORD="$PASSWORD" \
   --from-literal=PAYMENT_JDBC_PASSWORD="$PASSWORD" \
   --from-literal=ACCOUNTING_JDBC_PASSWORD="$PASSWORD" \
+  --from-literal=FINANCE_JDBC_PASSWORD="$PASSWORD" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 echo "apply 清单 ..."
 kubectl apply -k "$ROOT/kubernetes/apps"
 
 rollout sentinel-dashboard
+rollout mdyaipay-finance-mock-1
+rollout mdyaipay-finance-mock-2
+rollout mdyaipay-finance-gateway-1
+rollout mdyaipay-finance-gateway-2
+rollout mdyaipay-finance-1
+rollout mdyaipay-finance-2
 rollout mdyaipay-user-1
 rollout mdyaipay-user-2
 rollout mdyaipay-payment-1
@@ -77,6 +84,12 @@ rollout mdyaipay-accounting-2
 rollout mdyaipay-gateway-1
 rollout mdyaipay-gateway-2
 
+wait_health "http://127.0.0.1:8097/actuator/health" "finance-mock-1"
+wait_health "http://127.0.0.1:8098/actuator/health" "finance-mock-2"
+wait_health "http://127.0.0.1:8087/actuator/health" "finance-gateway-1"
+wait_health "http://127.0.0.1:8088/actuator/health" "finance-gateway-2"
+wait_health "http://127.0.0.1:8091/actuator/health" "finance-1"
+wait_health "http://127.0.0.1:8092/actuator/health" "finance-2"
 wait_health "http://127.0.0.1:8082/actuator/health" "user-1"
 wait_health "http://127.0.0.1:8083/actuator/health" "user-2"
 wait_health "http://127.0.0.1:8081/actuator/health" "payment-1"
@@ -92,9 +105,13 @@ if kubectl get deploy prometheus -n mdyaipay-infra >/dev/null 2>&1; then
 fi
 
 echo ""
-echo "user     http://127.0.0.1:8082  http://127.0.0.1:8083"
-echo "payment  http://127.0.0.1:8081  http://127.0.0.1:8084"
-echo "account  http://127.0.0.1:8085  http://127.0.0.1:8086"
-echo "gateway  http://127.0.0.1:8041  http://127.0.0.1:8042"
-echo "sentinel http://127.0.0.1:8858  (sentinel / sentinel)"
+echo "finance-mock     http://127.0.0.1:8097  http://127.0.0.1:8098"
+echo "finance-gateway  http://127.0.0.1:8087  http://127.0.0.1:8088"
+echo "finance          http://127.0.0.1:8091  http://127.0.0.1:8092"
+echo "user             http://127.0.0.1:8082  http://127.0.0.1:8083"
+echo "payment          http://127.0.0.1:8081  http://127.0.0.1:8084"
+echo "accounting       http://127.0.0.1:8085  http://127.0.0.1:8086"
+echo "gateway          http://127.0.0.1:8041  http://127.0.0.1:8042"
+echo "sentinel         http://127.0.0.1:8858  (sentinel / sentinel)"
+echo "联调冒烟: ./scripts/run-mdyaipay-k8s-smoke.sh"
 echo "停止: ./scripts/stop-mdyaipay-k8s.sh"

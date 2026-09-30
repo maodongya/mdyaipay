@@ -62,6 +62,26 @@ public final class ReconciliationBatch {
                 batchChannel, businessDate, billSource, BatchStatus.OPEN, matched, differences);
     }
 
+    /**
+     * 从持久化行重建批次，不再比对。
+     * <p>前置：计数字段与差异行已由仓储读出。无副作用。</p>
+     */
+    public static ReconciliationBatch rehydrate(
+            String channel,
+            LocalDate businessDate,
+            BillSource billSource,
+            BatchStatus status,
+            int matchedCount,
+            List<ReconciliationDifference> differences) {
+        return new ReconciliationBatch(
+                requireText(channel, "channel"),
+                Objects.requireNonNull(businessDate, "businessDate must not be null"),
+                Objects.requireNonNull(billSource, "billSource must not be null"),
+                Objects.requireNonNull(status, "status must not be null"),
+                matchedCount,
+                Objects.requireNonNull(differences, "differences must not be null"));
+    }
+
     /** 平账笔数。 */
     public int matchedCount() {
         return matchedCount;

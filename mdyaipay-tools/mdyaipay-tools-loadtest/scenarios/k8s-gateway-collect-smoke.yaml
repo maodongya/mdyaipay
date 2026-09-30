@@ -1,0 +1,31 @@
+# Kubernetes 联调：低并发避免网关令牌桶 429（默认 300/s，多线程仍可能瞬时打满）
+name: k8s-gateway-collect-smoke
+protocol: http
+load:
+  threads: 3
+  durationSeconds: 12
+  rampUpSeconds: 2
+  thinkTimeMillis: 200
+  targetRps: null
+metrics:
+  percentiles: [0.5, 0.9, 0.99]
+  warmupSeconds: 2
+  recordErrors: true
+  maxErrorSamples: 10
+target:
+  url: http://127.0.0.1:8041/api/v1/payments/collect
+  method: POST
+  headers:
+    Content-Type: application/json
+  bodyMode: merchantEncryptedCollect
+  merchantEncryptedCollect:
+    credentialsFile: target/loadtest-merchant-credentials.json
+    amount: 100
+    channel: MOCK
+    productType: QUICK_COLLECTION
+    orderNoPrefix: K8S-SMOKE-
+  timeoutMillis: 15000
+  expectStatus: [200]
+report:
+  formats: [console, json]
+  outputDir: target/loadtest-reports

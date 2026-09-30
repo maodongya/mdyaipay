@@ -19,14 +19,17 @@ import java.util.List;
 @Component
 public class DubboCollectSuccessQuery implements CollectSuccessQuery {
 
-    private final PaymentGatewayFacade paymentGatewayFacade;
+    @DubboReference(version = "1.0.0", check = false, protocol = "tri")
+    private PaymentGatewayFacade paymentGatewayFacade;
+
+    /** 供 Spring 与 Dubbo 字段注入。 */
+    public DubboCollectSuccessQuery() {
+    }
 
     /**
-     * @param paymentGatewayFacade 支付收单门面
+     * 单测直接传入支付门面。
      */
-    public DubboCollectSuccessQuery(
-            @DubboReference(version = "1.0.0", check = false, protocol = "tri")
-            PaymentGatewayFacade paymentGatewayFacade) {
+    DubboCollectSuccessQuery(PaymentGatewayFacade paymentGatewayFacade) {
         this.paymentGatewayFacade = paymentGatewayFacade;
     }
 

@@ -1,0 +1,69 @@
+server:
+  port: ${FINANCE_SERVER_PORT:8084}
+
+spring:
+  application:
+    name: mdyaipay-finance
+  datasource:
+    url: ${FINANCE_JDBC_URL:jdbc:mysql://127.0.0.1:3306/mdyaipay_finance?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
+    username: ${FINANCE_JDBC_USER:root}
+    password: ${FINANCE_JDBC_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+
+finance:
+  id:
+    worker-id: ${FINANCE_ID_WORKER_ID:5}
+    datacenter-id: ${FINANCE_ID_DATACENTER_ID:1}
+  jdbc:
+    init-schema: ${FINANCE_JDBC_INIT_SCHEMA:true}
+    reset-schema: ${FINANCE_JDBC_RESET_SCHEMA:false}
+
+mdyaipay:
+  trace:
+    dubbo:
+      enabled: true
+  mybatis:
+    sql-perf:
+      enabled: true
+      slow-threshold-millis: 0
+      include-trace-id: true
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+dubbo:
+  application:
+    name: mdyaipay-finance
+    qos-enable: false
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20884}
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:zookeeper://127.0.0.1:2181}
+  metrics:
+    enable: true
+
+logging:
+  file:
+    name: logs/mdyaipay-finance.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true

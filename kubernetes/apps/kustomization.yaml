@@ -6,6 +6,9 @@ namespace: mdyaipay
 resources:
   - namespace.yaml
   - sentinel.yaml
+  - finance-mock.yaml
+  - finance-gateway.yaml
+  - finance.yaml
   - user.yaml
   - payment.yaml
   - accounting.yaml

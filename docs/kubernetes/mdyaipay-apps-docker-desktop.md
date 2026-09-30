@@ -1,6 +1,6 @@
 # mdyaipay 业务栈（Docker Desktop Kubernetes）
 
-命名空间 **`mdyaipay`**：Sentinel Dashboard + user / payment / accounting / gateway **各 2 节点**（账务见 [mdyaipay-accounting-k8s.md](mdyaipay-accounting-k8s.md)）。  
+命名空间 **`mdyaipay`**：Sentinel + **finance-mock / finance-gateway / finance** + user / payment / accounting / gateway **各 2 节点**（账务 [mdyaipay-accounting-k8s.md](mdyaipay-accounting-k8s.md)，渠道 [mdyaipay-finance-channel-k8s.md](mdyaipay-finance-channel-k8s.md)）。  
 基础设施在 **`mdyaipay-infra`**（见 [mdyaipay-infra-group.md](mdyaipay-infra-group.md)）。
 
 ## 部署
@@ -25,7 +25,12 @@ MDYAIPAY_SKIP_BUILD=true ./scripts/run-mdyaipay-k8s.sh   # 跳过构建
 | User | http://127.0.0.1:8082 、8083 |
 | Payment | http://127.0.0.1:8081 、8084 |
 | Accounting | http://127.0.0.1:8085 、8086 |
+| Finance mock | http://127.0.0.1:8097 、8098 |
+| Finance gateway | http://127.0.0.1:8087 、8088 |
+| Finance（对账） | http://127.0.0.1:8091 、8092 |
 | Sentinel | http://127.0.0.1:8858 |
+
+联调冒烟：`./scripts/run-mdyaipay-k8s-smoke.sh`（依赖上表 gateway/user/payment 已就绪）。
 
 ## 集群内 DNS
 
@@ -42,6 +47,10 @@ Dubbo 注册 IP 为 **Pod IP**（`DUBBO_IP_TO_REGISTRY`）。
 
 本地构建 tag：`:local`，`imagePullPolicy: IfNotPresent`（Docker Desktop 共享 daemon）。
 
+## 资源（Docker Desktop）
+
+全栈 **双节点** 约需 **8GiB+** 分配给 Kubernetes（Settings → Resources）。若 Pod 长期 `Pending` 且 Events 为 `Insufficient memory`，可先 `./scripts/stop-mdyaipay-k8s.sh` 再提高内存后 `./scripts/run-mdyaipay-k8s.sh`，或临时只保留各服务 `-1` 节点做联调。
+
 ## 停止
 
 ```bash
@@ -54,6 +63,9 @@ Dubbo 注册 IP 为 **Pod IP**（`DUBBO_IP_TO_REGISTRY`）。
 kubernetes/apps/
   namespace.yaml
   sentinel.yaml
+  finance-mock.yaml
+  finance-gateway.yaml
+  finance.yaml
   user.yaml
   payment.yaml
   accounting.yaml

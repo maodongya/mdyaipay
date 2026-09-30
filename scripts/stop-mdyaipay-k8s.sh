@@ -13,7 +13,14 @@ if ! kubectl get namespace mdyaipay >/dev/null 2>&1; then
 fi
 
 echo "==> 缩容 mdyaipay 业务 Deployment"
-for d in sentinel-dashboard mdyaipay-user-1 mdyaipay-user-2 mdyaipay-payment-1 mdyaipay-payment-2 mdyaipay-accounting-1 mdyaipay-accounting-2 mdyaipay-gateway-1 mdyaipay-gateway-2; do
+for d in sentinel-dashboard \
+  mdyaipay-finance-mock-1 mdyaipay-finance-mock-2 \
+  mdyaipay-finance-gateway-1 mdyaipay-finance-gateway-2 \
+  mdyaipay-finance-1 mdyaipay-finance-2 \
+  mdyaipay-user-1 mdyaipay-user-2 \
+  mdyaipay-payment-1 mdyaipay-payment-2 \
+  mdyaipay-accounting-1 mdyaipay-accounting-2 \
+  mdyaipay-gateway-1 mdyaipay-gateway-2; do
   if kubectl get deployment "$d" -n mdyaipay >/dev/null 2>&1; then
     kubectl scale "deployment/$d" -n mdyaipay --replicas=0
   fi
