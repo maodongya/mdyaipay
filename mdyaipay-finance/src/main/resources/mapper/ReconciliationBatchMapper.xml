@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mdyaipay.finance.repository.mybatis.mapper.ReconciliationBatchMapper">
+
+    <select id="findBatch" resultType="com.mdyaipay.finance.repository.mybatis.row.ReconciliationBatchRow">
+        SELECT id, channel, business_date, status, bill_source, matched_count
+        FROM reconciliation_batch
+        WHERE channel = #{channel} AND business_date = #{businessDate}
+    </select>
+
+    <insert id="upsertBatch">
+        INSERT INTO reconciliation_batch (id, channel, business_date, status, bill_source, matched_count, created_at, updated_at)
+        VALUES (#{id}, #{channel}, #{businessDate}, #{status}, #{billSource}, #{matchedCount}, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))
+        ON DUPLICATE KEY UPDATE
+            status = VALUES(status),
+            bill_source = VALUES(bill_source),
+            matched_count = VALUES(matched_count),
+            updated_at = CURRENT_TIMESTAMP(3)
+    </insert>
+
+    <delete id="deleteDifferences">
+        DELETE FROM reconciliation_difference WHERE batch_id = #{batchId}
+    </delete>
+
+    <insert id="insertDifference">
+        INSERT INTO reconciliation_difference
+            (id, batch_id, difference_type, channel_trade_no, order_no, local_amount, channel_amount)
+        VALUES
+            (#{id}, #{batchId}, #{differenceType}, #{channelTradeNo}, #{orderNo}, #{localAmount}, #{channelAmount})
+    </insert>
+
+    <select id="findDifferences" resultType="com.mdyaipay.finance.repository.mybatis.row.ReconciliationDifferenceRow">
+        SELECT id, batch_id, difference_type, channel_trade_no, order_no, local_amount, channel_amount
+        FROM reconciliation_difference
+        WHERE batch_id = #{batchId}
+        ORDER BY id
+    </select>
+</mapper>
