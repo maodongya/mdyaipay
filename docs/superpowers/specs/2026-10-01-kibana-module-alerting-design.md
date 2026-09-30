@@ -167,8 +167,8 @@ Bootstrap 使用仓库内 Python 脚本和 JSON 规则清单：
 
 - `kubernetes/infra/elastic/`：Elasticsearch、Kibana、Filebeat、RBAC、PVC、ConfigMap 和 Kustomization。
 - `kubernetes/apps/`：日志链路 Heartbeat CronJob。
-- `config/kibana/alerts/`：demo/production 规则清单。
-- `scripts/kibana/`：Bootstrap 与规则校验脚本。
+- `kubernetes/infra/elastic/bootstrap/`：Bootstrap、规则目录与单元测试；由同目录 Kustomization 直接生成 ConfigMap。
+- `scripts/`：部署、规则 profile 切换和冒烟验证入口。
 - `docs/monitoring/`：部署、切换 profile、配置 Webhook、触发测试和排障说明。
 
 `kubernetes/infra/kustomization.yaml` 纳入 Elastic 子目录；应用 Kustomization 纳入 Heartbeat。
