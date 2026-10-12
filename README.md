@@ -16,6 +16,7 @@
 | `mdyaipay-gateway` | 接入网关（路由、鉴权、限流） |
 | `mdyaipay-cashier` | 收银台 |
 | `mdyaipay-tools/.../ratelimit` | 限流工具（core / redis / spring-boot） |
+| `mdyaipay-tools/.../logging` | 共享 ECS JSON 日志与 Kibana 报警事件标记 |
 
 详见 [`docs/modules.md`](docs/modules.md)。
 
@@ -26,7 +27,7 @@
 - [`docs/superpowers/specs/2026-09-20-ratelimit-design.md`](docs/superpowers/specs/2026-09-20-ratelimit-design.md)：限流设计（网关令牌桶 / 服务滑动窗口）
 - [`docs/方便人理解代码规约.md`](docs/方便人理解代码规约.md)：可读性规约（§5.0 类/方法中文 Javadoc、单文件 ≤500 行、单方法 ≤50 行有效代码；命名、分层、功能块）
 - [`docs/设计原则规约.md`](docs/设计原则规约.md)：SOLID / KISS / DRY / SOC / YAGNI
-- [`docs/设计模式规约.md`](docs/设计模式规约.md)：GoF 23 种模式在本工程中的选用与落点
+- [`docs/monitoring/kibana-alerting.md`](docs/monitoring/kibana-alerting.md)：各运行服务 Kibana 日志报警
 
 ## 构建与运行
 

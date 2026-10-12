@@ -7,6 +7,9 @@ import com.mdyaipay.financegateway.api.payout.ChannelPayoutCommand;
 import com.mdyaipay.financegateway.api.payout.ChannelPayoutView;
 import com.mdyaipay.financegateway.api.withhold.ChannelWithholdCommand;
 import com.mdyaipay.financegateway.api.withhold.ChannelWithholdView;
+import com.mdyaipay.tools.logging.AlertEvents;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,6 +17,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ChannelMockService {
+
+    private static final Logger LOG = LogManager.getLogger(ChannelMockService.class);
 
     /**
      * 模拟收单：网银待确认，其余按单号哈希约 80% 成功。
@@ -28,18 +33,25 @@ public class ChannelMockService {
             return new ChannelCollectView(
                     ChannelCollectSubmitResult.SYNC_SUCCESS.name(), "MOCK-" + command.getOrderNo());
         }
+        LOG.warn(AlertEvents.failure(AlertEvents.MOCK_CHANNEL_FAILED));
         return new ChannelCollectView(ChannelCollectSubmitResult.SYNC_FAILURE.name(), null);
     }
 
     /** 模拟代扣：按单号哈希约 80% 受理成功。 */
     public ChannelWithholdView deduct(ChannelWithholdCommand command) {
         boolean ok = Math.abs(command.getDeductionNo().hashCode()) % 10 < 8;
+        if (!ok) {
+            LOG.warn(AlertEvents.failure(AlertEvents.MOCK_CHANNEL_FAILED));
+        }
         return new ChannelWithholdView(ok);
     }
 
     /** 模拟代付：按单号哈希约 80% 受理成功。 */
     public ChannelPayoutView remit(ChannelPayoutCommand command) {
         boolean ok = Math.abs(command.getPayoutNo().hashCode()) % 10 < 8;
+        if (!ok) {
+            LOG.warn(AlertEvents.failure(AlertEvents.MOCK_CHANNEL_FAILED));
+        }
         return new ChannelPayoutView(ok);
     }
 }

@@ -1,0 +1,125 @@
+{
+  "services": [
+    "mdyaipay-gateway",
+    "mdyaipay-user",
+    "mdyaipay-payment",
+    "mdyaipay-accounting",
+    "mdyaipay-finance",
+    "mdyaipay-finance-gateway",
+    "mdyaipay-finance-mock"
+  ],
+  "error_rules": {
+    "severity": "P1",
+    "thresholds": {
+      "demo": 1,
+      "production": 5
+    },
+    "window_minutes": 5
+  },
+  "heartbeat": {
+    "service": "mdyaipay-log-pipeline",
+    "event": "log_pipeline_heartbeat",
+    "severity": "P1",
+    "comparator": "<",
+    "thresholds": {
+      "demo": 1,
+      "production": 1
+    },
+    "window_minutes": {
+      "demo": 3,
+      "production": 5
+    }
+  },
+  "event_rules": [
+    {
+      "service": "mdyaipay-gateway",
+      "event": "gateway_upstream_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 5 }
+    },
+    {
+      "service": "mdyaipay-gateway",
+      "event": "rate_limit_backend_error",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 3 }
+    },
+    {
+      "service": "mdyaipay-gateway",
+      "event": "rate_limit_denied",
+      "severity": "P2",
+      "thresholds": { "demo": 3, "production": 100 }
+    },
+    {
+      "service": "mdyaipay-user",
+      "event": "merchant_auth_rejected",
+      "severity": "P2",
+      "thresholds": { "demo": 3, "production": 50 }
+    },
+    {
+      "service": "mdyaipay-user",
+      "event": "outbox_relay_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 3 }
+    },
+    {
+      "service": "mdyaipay-payment",
+      "event": "payment_channel_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 5 }
+    },
+    {
+      "service": "mdyaipay-payment",
+      "event": "payment_failed",
+      "severity": "P2",
+      "thresholds": { "demo": 2, "production": 20 }
+    },
+    {
+      "service": "mdyaipay-payment",
+      "event": "accounting_notify_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 3 }
+    },
+    {
+      "service": "mdyaipay-accounting",
+      "event": "wallet_entry_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 5 }
+    },
+    {
+      "service": "mdyaipay-accounting",
+      "event": "wallet_version_conflict",
+      "severity": "P2",
+      "thresholds": { "demo": 2, "production": 20 }
+    },
+    {
+      "service": "mdyaipay-finance",
+      "event": "reconciliation_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 2 }
+    },
+    {
+      "service": "mdyaipay-finance",
+      "event": "reconciliation_difference_found",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 1 }
+    },
+    {
+      "service": "mdyaipay-finance-gateway",
+      "event": "channel_http_failed",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 5 }
+    },
+    {
+      "service": "mdyaipay-finance-gateway",
+      "event": "channel_http_timeout",
+      "severity": "P1",
+      "thresholds": { "demo": 1, "production": 3 }
+    },
+    {
+      "service": "mdyaipay-finance-mock",
+      "event": "mock_channel_failed",
+      "severity": "P2",
+      "thresholds": { "demo": 2, "production": 20 }
+    }
+  ]
+}

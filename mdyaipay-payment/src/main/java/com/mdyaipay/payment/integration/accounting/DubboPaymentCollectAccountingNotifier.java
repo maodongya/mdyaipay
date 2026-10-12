@@ -5,6 +5,7 @@ import com.mdyaipay.accounting.api.collect.PaymentCollectSuccessCommand;
 import com.mdyaipay.payment.domain.collect.PaymentOrder;
 import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.tools.exception.ErrorCode;
+import com.mdyaipay.tools.logging.AlertEvents;
 import com.mdyaipay.tools.model.ApiResponse;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.logging.log4j.LogManager;
@@ -42,10 +43,9 @@ public class DubboPaymentCollectAccountingNotifier implements PaymentCollectAcco
         ApiResponse<Void> response = collectAccountingFacade.onPaymentCollectSuccess(command);
         if (response.getCode() != ErrorCode.SUCCESS.getCode()) {
             log.warn(
-                    "event=payment_collect_accounting_dubbo_failed orderNo={} code={} message={}",
-                    order.getOrderNo(),
-                    response.getCode(),
-                    response.getMessage());
+                    "{} code={}",
+                    AlertEvents.failure(AlertEvents.ACCOUNTING_NOTIFY_FAILED),
+                    response.getCode());
         }
     }
 }

@@ -23,5 +23,6 @@
         <module>mdyaipay-tools-loadtest</module>
         <module>mdyaipay-tools-ratelimit</module>
         <module>mdyaipay-tools-sentinel</module>
+        <module>mdyaipay-tools-logging</module>
     </modules>
 </project>

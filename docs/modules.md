@@ -9,6 +9,7 @@
 | 公共（聚合） | `mdyaipay-tools` | Maven 聚合：common、timetrace、trace、mybatis、loadtest 等 |
 | 公共（聚合） | `mdyaipay-tools-common` | 公共基础聚合（`packaging=pom`） |
 | 公共 | `mdyaipay-tools-common-core` | 雪花 ID、金额分/元工具、统一 API 响应与错误码（无业务编排） |
+| 公共 | `mdyaipay-tools-logging` | 共享 Log4j2 ECS JSON 与 Kibana 报警事件标记（无业务编排） |
 | 公共（聚合） | `mdyaipay-tools-timetrace` | 方法耗时追踪聚合 |
 | 公共 | `mdyaipay-tools-timetrace-core` | Spring AOP `@TimeTrace`：入口方法耗时与慢调用报告（无业务编排） |
 | 公共（聚合） | `mdyaipay-tools-trace` | 分布式 Trace 聚合 |

@@ -3,6 +3,7 @@ package com.mdyaipay.user.integration.mq;
 import com.mdyaipay.user.config.UserProperties;
 import com.mdyaipay.user.domain.outbox.DomainOutboxRepository;
 import com.mdyaipay.user.domain.outbox.model.DomainOutboxMessage;
+import com.mdyaipay.tools.logging.AlertEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -52,7 +53,7 @@ public class OutboxMessageRelay {
                         MessageBuilder.withPayload(message.getPayloadJson()).build());
                 outboxRepository.markSent(message.getOutboxId(), Instant.now());
             } catch (RuntimeException ex) {
-                LOG.warn("outbox relay failed outboxId={} dest={}", message.getOutboxId(), destination, ex);
+                LOG.warn("{} dest={}", AlertEvents.failure(AlertEvents.OUTBOX_RELAY_FAILED), destination, ex);
             }
         }
     }

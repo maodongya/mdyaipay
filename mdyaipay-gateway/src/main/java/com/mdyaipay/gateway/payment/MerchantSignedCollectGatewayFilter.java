@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mdyaipay.gateway.dubbo.PaymentGatewayClient;
 import com.mdyaipay.payment.api.gateway.command.CollectPaymentCommand;
+import com.mdyaipay.tools.logging.AlertEvents;
 import com.mdyaipay.tools.model.ApiResponse;
 import com.mdyaipay.tools.trace.http.TraceWebExchangeSupport;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -26,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 public class MerchantSignedCollectGatewayFilter implements GlobalFilter, Ordered {
 
     private static final String COLLECT_PATH = "/api/v1/payments/collect";
+    private static final Logger LOG = LogManager.getLogger(MerchantSignedCollectGatewayFilter.class);
 
     private final OpenApiCredentialResolver credentialResolver;
     private final PaymentGatewayClient paymentClient;
@@ -57,7 +61,7 @@ public class MerchantSignedCollectGatewayFilter implements GlobalFilter, Ordered
                     return TraceWebExchangeSupport.callBlocking(exchange, () -> collectViaDubbo(body))
                             .flatMap(responseBytes -> writeOk(exchange, responseBytes));
                 })
-                .onErrorResume(MerchantSignedCollectException.class, ex -> writeError(exchange, ex));
+                .onErrorResume(ex -> writeFailure(exchange, ex));
     }
 
     private byte[] collectViaDubbo(String encryptedBody) throws Exception {
@@ -106,6 +110,18 @@ public class MerchantSignedCollectGatewayFilter implements GlobalFilter, Ordered
     @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE + 10;
+    }
+
+    /**
+     * 将收单失败转为 HTTP 响应；非商户校验错误视为上游失败。
+     * <p>幂等：每次异常各写一条日志。</p>
+     */
+    Mono<Void> writeFailure(ServerWebExchange exchange, Throwable ex) {
+        if (ex instanceof MerchantSignedCollectException merchantEx) {
+            return writeError(exchange, merchantEx);
+        }
+        LOG.error(AlertEvents.failure(AlertEvents.GATEWAY_UPSTREAM_FAILED), ex);
+        return writeError(exchange, MerchantSignedCollectException.badRequest("upstream failed"));
     }
 
     public Mono<Void> writeError(ServerWebExchange exchange, MerchantSignedCollectException ex) {

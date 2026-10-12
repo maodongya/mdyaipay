@@ -275,3 +275,47 @@ mdyaipay_wait_k8s_monitoring_ready() {
   kubectl get deploy,pod,svc -n mdyaipay-infra -l app.kubernetes.io/name=grafana 2>&1 || true
   return 1
 }
+
+mdyaipay_wait_k8s_elastic_ready() {
+  local attempts="${1:-90}"
+  local i=1
+  while (( i <= attempts )); do
+    local es_ready kibana_ready
+    es_ready="$(kubectl get statefulset elasticsearch -n mdyaipay-infra -o jsonpath='{.status.readyReplicas}' 2>/dev/null)"
+    kibana_ready="$(kubectl get deploy kibana -n mdyaipay-infra -o jsonpath='{.status.readyReplicas}' 2>/dev/null)"
+    if [[ "$es_ready" == "1" && "$kibana_ready" == "1" ]]; then
+      echo "K8s Elasticsearch + Kibana 已就绪"
+      return 0
+    fi
+    sleep 2
+    i=$((i + 1))
+  done
+  echo "Elasticsearch/Kibana 未在预期时间内就绪" >&2
+  kubectl get sts,deploy,pod,svc -n mdyaipay-infra -l app.kubernetes.io/component=logging 2>&1 || true
+  return 1
+}
+
+mdyaipay_wait_k8s_kibana_bootstrap() {
+  local attempts="${1:-90}"
+  local i=1
+  while (( i <= attempts )); do
+    local status
+    status="$(kubectl get job kibana-alert-bootstrap -n mdyaipay-infra -o jsonpath='{.status.succeeded}' 2>/dev/null)"
+    if [[ "$status" == "1" ]]; then
+      echo "Kibana 报警 Bootstrap Job 已成功"
+      return 0
+    fi
+    local failed
+    failed="$(kubectl get job kibana-alert-bootstrap -n mdyaipay-infra -o jsonpath='{.status.failed}' 2>/dev/null)"
+    if [[ -n "$failed" && "$failed" != "0" ]]; then
+      echo "Kibana 报警 Bootstrap Job 失败" >&2
+      kubectl logs -n mdyaipay-infra job/kibana-alert-bootstrap --tail=80 2>&1 || true
+      return 1
+    fi
+    sleep 2
+    i=$((i + 1))
+  done
+  echo "Kibana 报警 Bootstrap Job 未在预期时间内成功" >&2
+  kubectl describe job kibana-alert-bootstrap -n mdyaipay-infra 2>&1 || true
+  return 1
+}

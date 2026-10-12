@@ -10,6 +10,8 @@
 | Nacos standalone | `nacos` | 8848 | [../nacos/ratelimit-nacos.md](../nacos/ratelimit-nacos.md) |
 | Prometheus | `prometheus` | 9090 | [monitoring-docker-desktop.md](monitoring-docker-desktop.md) |
 | Grafana | `grafana` | 3000 | [monitoring-docker-desktop.md](monitoring-docker-desktop.md) |
+| Elasticsearch | `elasticsearch` | 9200 | [../monitoring/kibana-alerting.md](../monitoring/kibana-alerting.md) |
+| Kibana | `kibana` | 5601 | [../monitoring/kibana-alerting.md](../monitoring/kibana-alerting.md) |
 
 ## 全量重建（命名空间丢失 / PVC 清空）
 
@@ -35,6 +37,7 @@ kubectl apply -k kubernetes/infra        # 会 reconcile 已存在的 mysql/redi
 ./scripts/apply-mdyaipay-zookeeper-k8s.sh
 ./scripts/apply-mdyaipay-nacos-k8s.sh
 ./scripts/apply-mdyaipay-monitoring-k8s.sh
+./scripts/apply-mdyaipay-elastic-k8s.sh
 ```
 
 ## Docker Compose 业务栈连接

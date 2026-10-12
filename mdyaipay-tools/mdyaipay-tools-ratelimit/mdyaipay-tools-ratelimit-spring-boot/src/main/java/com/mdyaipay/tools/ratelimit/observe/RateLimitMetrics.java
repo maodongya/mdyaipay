@@ -77,10 +77,15 @@ public final class RateLimitMetrics {
             }
         }
         if (OUTCOME_DENIED.equals(outcome)) {
-            log.warn("event=rate_limit_denied rule_id={} path={} limit={} backend={}", ruleId, path, limit, backend);
+            log.warn(
+                    "event=rate_limit_denied outcome=failure rule_id={} path={} limit={} backend={}",
+                    ruleId,
+                    path,
+                    limit,
+                    backend);
         } else if (OUTCOME_BACKEND_ERROR.equals(outcome)) {
             log.warn(
-                    "event=rate_limit_backend_error rule_id={} path={} fail_open={} exception={} backend={}",
+                    "event=rate_limit_backend_error outcome=failure rule_id={} path={} fail_open={} exception={} backend={}",
                     ruleId,
                     path,
                     failOpenApplied,

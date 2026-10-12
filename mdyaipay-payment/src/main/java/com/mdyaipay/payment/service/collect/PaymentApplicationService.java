@@ -8,7 +8,10 @@ import com.mdyaipay.payment.domain.collect.PaymentStatus;
 import com.mdyaipay.payment.domain.collect.PaymentSubmitResult;
 import com.mdyaipay.payment.integration.accounting.PaymentCollectAccountingNotifier;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
+import com.mdyaipay.tools.logging.AlertEvents;
 import com.mdyaipay.tools.timetrace.TimeTrace;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -26,6 +29,7 @@ import java.util.Objects;
 @Service
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class PaymentApplicationService {
+    private static final Logger LOG = LogManager.getLogger(PaymentApplicationService.class);
     private final PaymentOrderRepository orderRepository;
     private final PaymentGateway paymentGateway;
     private final PaymentBusinessNoGenerator businessNoGenerator;
@@ -84,13 +88,17 @@ public class PaymentApplicationService {
             PaymentSubmitResult result = paymentGateway.pay(order);
             switch (result.kind()) {
                 case SYNC_SUCCESS -> order.markSuccess(result.channelTradeNo());
-                case SYNC_FAILURE -> order.markFailed();
+                case SYNC_FAILURE -> {
+                    order.markFailed();
+                    LOG.warn(AlertEvents.failure(AlertEvents.PAYMENT_FAILED));
+                }
                 case AWAITING_CHANNEL_CONFIRMATION -> {
                     /* 网银等：保持 PROCESSING，等待回调或查单确认 */
                 }
             }
         } catch (RuntimeException ex) {
             order.markFailed();
+            LOG.error(AlertEvents.failure(AlertEvents.PAYMENT_CHANNEL_FAILED), ex);
         }
 
         PaymentOrder saved = orderRepository.save(order);
@@ -115,6 +123,7 @@ public class PaymentApplicationService {
             order.markSuccess(channelTradeNo);
         } else {
             order.markFailed();
+            LOG.warn(AlertEvents.failure(AlertEvents.PAYMENT_FAILED));
         }
         PaymentOrder saved = orderRepository.save(order);
         notifyAccountingIfSuccess(saved);
@@ -129,6 +138,7 @@ public class PaymentApplicationService {
         try {
             accountingNotifier.onCollectSuccess(order);
         } catch (RuntimeException ex) {
+            LOG.error(AlertEvents.failure(AlertEvents.ACCOUNTING_NOTIFY_FAILED), ex);
             /* 账务通知失败留待 MQ 重试或对账补偿，不在此回滚支付状态 */
         }
     }

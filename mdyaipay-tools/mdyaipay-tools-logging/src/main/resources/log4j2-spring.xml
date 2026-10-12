@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 七个运行服务共用：stdout 与滚动文件均为 ECS JSON，供 Filebeat / 本地检索 -->
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
+        <Property name="APP_LOG">${spring:logging.file.name:-logs/mdyaipay.log}</Property>
+        <Property name="SERVICE_NAME">${spring:spring.application.name:-mdyaipay}</Property>
         <Property name="TIMETRACE_LOG">${spring:mdyaipay.timetrace.log-file:-logs/timetrace.log}</Property>
-        <Property name="APP_LOG">${spring:logging.file.name:-logs/mdyaipay-payment.log}</Property>
-        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId=%X{traceId} spanId=%X{spanId} spanLevelGlobal=%X{spanLevelGlobal} serverDepthLevel=%X{serverDepthLevel} - %msg%n</Property>
     </Properties>
 
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <EcsLayout serviceName="${SERVICE_NAME}"
+                       includeMarkers="true"
+                       stackTraceAsArray="false">
+                <AdditionalField key="trace.id" value="${ctx:traceId}"/>
+                <AdditionalField key="span.id" value="${ctx:spanId}"/>
+            </EcsLayout>
         </Console>
         <RollingFile name="AppFile"
                      fileName="${APP_LOG}"
                      filePattern="${APP_LOG}.%d{yyyy-MM-dd}.gz">
-            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <EcsLayout serviceName="${SERVICE_NAME}"
+                       includeMarkers="true"
+                       stackTraceAsArray="false">
+                <AdditionalField key="trace.id" value="${ctx:traceId}"/>
+                <AdditionalField key="span.id" value="${ctx:spanId}"/>
+            </EcsLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy interval="1"/>
             </Policies>
@@ -37,8 +48,8 @@
                 additivity="false">
             <AppenderRef ref="TimeTraceFile"/>
         </Logger>
-        <!-- 仅写 AppFile：Root 若同时挂 Console，且启动脚本把 stdout 重定向到同一日志文件，会出现逐行双份 -->
         <Root level="info">
+            <AppenderRef ref="Console"/>
             <AppenderRef ref="AppFile"/>
         </Root>
     </Loggers>

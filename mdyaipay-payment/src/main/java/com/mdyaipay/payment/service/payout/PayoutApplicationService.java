@@ -4,6 +4,9 @@ import com.mdyaipay.payment.gateway.PayoutGateway;
 import com.mdyaipay.payment.domain.payout.PayoutOrder;
 import com.mdyaipay.payment.repository.PayoutOrderRepository;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
+import com.mdyaipay.tools.logging.AlertEvents;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import java.util.Objects;
 @Service
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class PayoutApplicationService {
+    private static final Logger LOG = LogManager.getLogger(PayoutApplicationService.class);
     private final PayoutOrderRepository orderRepository;
     private final PayoutGateway payoutGateway;
     private final PaymentBusinessNoGenerator businessNoGenerator;
@@ -56,9 +60,11 @@ public class PayoutApplicationService {
                 order.markSuccess();
             } else {
                 order.markFailed();
+                LOG.warn(AlertEvents.failure(AlertEvents.PAYMENT_FAILED));
             }
         } catch (RuntimeException ex) {
             order.markFailed();
+            LOG.error(AlertEvents.failure(AlertEvents.PAYMENT_CHANNEL_FAILED), ex);
         }
 
         return orderRepository.save(order);

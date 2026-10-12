@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mdyaipay-log-pipeline-heartbeat
+  labels:
+    app.kubernetes.io/name: mdyaipay-log-pipeline
+    app.kubernetes.io/part-of: mdyaipay
+    app.kubernetes.io/component: logging
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: mdyaipay-log-pipeline
+            app.kubernetes.io/part-of: mdyaipay
+            app.kubernetes.io/component: logging
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: heartbeat
+              image: python:3.12-alpine
+              imagePullPolicy: IfNotPresent
+              command:
+                - python3
+                - -c
+                - |
+                  import datetime
+                  import json
+                  now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                  print(json.dumps({
+                      "@timestamp": now,
+                      "log": {"level": "INFO"},
+                      "service": {"name": "mdyaipay-log-pipeline"},
+                      "message": "event=log_pipeline_heartbeat outcome=success"
+                  }))
+              resources:
+                requests:
+                  memory: 32Mi
+                  cpu: 10m
+                limits:
+                  memory: 64Mi
+                  cpu: 200m

@@ -15,3 +15,4 @@ resources:
   - zookeeper/statefulset.yaml
   - nacos
   - monitoring
+  - elastic

@@ -6,8 +6,11 @@ import com.mdyaipay.gateway.dubbo.PaymentGatewayClient;
 import com.mdyaipay.payment.api.gateway.command.ChannelConfirmCommand;
 import com.mdyaipay.payment.api.gateway.command.CreatePayoutCommand;
 import com.mdyaipay.payment.api.gateway.command.CreateWithholdCommand;
+import com.mdyaipay.tools.logging.AlertEvents;
 import com.mdyaipay.tools.model.ApiResponse;
 import com.mdyaipay.tools.trace.http.TraceWebExchangeSupport;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -32,6 +35,7 @@ public class PaymentDubboGatewayFilter implements GlobalFilter, Ordered {
 
     private static final Pattern PAYMENT_GET = Pattern.compile("^/api/v1/payments/([^/]+)$");
     private static final Pattern PAYMENT_CONFIRM = Pattern.compile("^/api/v1/payments/([^/]+)/channel-confirm$");
+    private static final Logger LOG = LogManager.getLogger(PaymentDubboGatewayFilter.class);
 
     private final PaymentGatewayClient paymentClient;
     private final ObjectMapper json;
@@ -68,14 +72,32 @@ public class PaymentDubboGatewayFilter implements GlobalFilter, Ordered {
                         return TraceWebExchangeSupport.callBlocking(exchange, () -> invoke(path, method.name(), body))
                                 .flatMap(responseBytes -> writeJson(exchange, 200, responseBytes));
                     })
-                    .onErrorResume(IllegalArgumentException.class,
-                            ex -> writeJson(exchange, 400, errorBody(ex.getMessage())));
+                    .onErrorResume(ex -> writeFailure(exchange, ex));
         }
 
         return TraceWebExchangeSupport.callBlocking(exchange, () -> invoke(path, method.name(), ""))
                 .flatMap(responseBytes -> writeJson(exchange, 200, responseBytes))
-                .onErrorResume(IllegalArgumentException.class,
-                        ex -> writeJson(exchange, 400, errorBody(ex.getMessage())));
+                .onErrorResume(ex -> writeFailure(exchange, ex));
+    }
+
+    /**
+     * 将下游失败转为 HTTP 响应；技术失败写稳定报警事件。
+     * <p>幂等：每次异常各写一条日志。</p>
+     */
+    Mono<Void> writeFailure(ServerWebExchange exchange, Throwable ex) {
+        if (ex instanceof IllegalArgumentException) {
+            return writeJson(exchange, 400, errorBody(ex.getMessage()));
+        }
+        logUpstreamFailed(ex);
+        return writeJson(exchange, 502, errorBody("upstream failed"));
+    }
+
+    /**
+     * 记录上游失败事件，供单测捕获。
+     * <p>幂等：每次调用写一条日志。</p>
+     */
+    void logUpstreamFailed(Throwable ex) {
+        LOG.error(AlertEvents.failure(AlertEvents.GATEWAY_UPSTREAM_FAILED), ex);
     }
 
     private byte[] invoke(String path, String method, String body) throws Exception {

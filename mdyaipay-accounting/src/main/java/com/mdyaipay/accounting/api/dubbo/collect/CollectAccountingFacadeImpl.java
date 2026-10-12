@@ -3,6 +3,7 @@ package com.mdyaipay.accounting.api.dubbo.collect;
 import com.mdyaipay.accounting.api.collect.CollectAccountingFacade;
 import com.mdyaipay.accounting.api.collect.PaymentCollectSuccessCommand;
 import com.mdyaipay.accounting.api.mq.PaymentCollectSettledMessage;
+import com.mdyaipay.accounting.observe.WalletAlertLog;
 import com.mdyaipay.accounting.service.AccountingBusinessException;
 import com.mdyaipay.accounting.service.wallet.MerchantWalletApplicationService;
 import com.mdyaipay.tools.model.ApiResponse;
@@ -29,8 +30,10 @@ public class CollectAccountingFacadeImpl implements CollectAccountingFacade {
             merchantWalletApplicationService.onPaymentCollectSettled(toMessage(command));
             return ApiResponse.ok(null);
         } catch (AccountingBusinessException ex) {
+            WalletAlertLog.entryFailed(ex);
             return ApiResponse.fail(ex.getErrorCode(), ex.getMessage());
         } catch (Exception ex) {
+            WalletAlertLog.unexpected(ex);
             return ApiResponse.fail(500, ex.getMessage());
         }
     }

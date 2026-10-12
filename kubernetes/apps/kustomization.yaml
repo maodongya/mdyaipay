@@ -13,3 +13,4 @@ resources:
   - payment.yaml
   - accounting.yaml
   - gateway.yaml
+  - log-pipeline-heartbeat.yaml

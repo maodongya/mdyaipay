@@ -4,7 +4,10 @@ import com.mdyaipay.payment.gateway.WithholdGateway;
 import com.mdyaipay.payment.domain.withhold.WithholdOrder;
 import com.mdyaipay.payment.repository.WithholdOrderRepository;
 import com.mdyaipay.payment.support.PaymentBusinessNoGenerator;
+import com.mdyaipay.tools.logging.AlertEvents;
 import com.mdyaipay.tools.timetrace.TimeTrace;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ import java.util.Objects;
 @Service
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class WithholdApplicationService {
+    private static final Logger LOG = LogManager.getLogger(WithholdApplicationService.class);
     private final WithholdOrderRepository orderRepository;
     private final WithholdGateway withholdGateway;
     private final PaymentBusinessNoGenerator businessNoGenerator;
@@ -59,9 +63,11 @@ public class WithholdApplicationService {
                 order.markSuccess();
             } else {
                 order.markFailed();
+                LOG.warn(AlertEvents.failure(AlertEvents.PAYMENT_FAILED));
             }
         } catch (RuntimeException ex) {
             order.markFailed();
+            LOG.error(AlertEvents.failure(AlertEvents.PAYMENT_CHANNEL_FAILED), ex);
         }
 
         return orderRepository.save(order);

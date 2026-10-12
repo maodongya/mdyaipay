@@ -10,8 +10,11 @@ import com.mdyaipay.finance.domain.reconcile.ReconciliationBatch;
 import com.mdyaipay.finance.domain.reconcile.ReconciliationDifference;
 import com.mdyaipay.finance.service.reconcile.ReconciliationApplicationService;
 import com.mdyaipay.tools.exception.ErrorCode;
+import com.mdyaipay.tools.logging.AlertEvents;
 import com.mdyaipay.tools.model.ApiResponse;
 import org.apache.dubbo.config.annotation.DubboService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -27,8 +30,13 @@ import java.util.List;
 @DubboService(version = "1.0.0")
 public class ReconciliationFacadeImpl implements ReconciliationFacade {
 
+    private static final Logger LOG = LogManager.getLogger(ReconciliationFacadeImpl.class);
+
     private final ReconciliationApplicationService reconciliationApplicationService;
 
+    /**
+     * @param reconciliationApplicationService 对账编排，不能为空
+     */
     public ReconciliationFacadeImpl(ReconciliationApplicationService reconciliationApplicationService) {
         this.reconciliationApplicationService = reconciliationApplicationService;
     }
@@ -36,11 +44,20 @@ public class ReconciliationFacadeImpl implements ReconciliationFacade {
     /** {@inheritDoc} */
     @Override
     public ApiResponse<ReconciliationBatchView> reconcile(ReconcileCommand command) {
-        return run(() -> toView(reconciliationApplicationService.reconcile(
+        ApiResponse<ReconciliationBatchView> response = run(() -> toView(reconciliationApplicationService.reconcile(
                 command.getChannel(),
                 parseDay(command.getBusinessDate()),
                 parseSource(command.getBillSource()),
                 command.getFilePath() == null ? null : Path.of(command.getFilePath()))));
+        if (response.getData() != null
+                && response.getData().getDifferences() != null
+                && !response.getData().getDifferences().isEmpty()) {
+            LOG.warn(
+                    "{} difference_count={}",
+                    AlertEvents.failure(AlertEvents.RECONCILIATION_DIFFERENCE_FOUND),
+                    response.getData().getDifferences().size());
+        }
+        return response;
     }
 
     /** {@inheritDoc} */
@@ -51,6 +68,7 @@ public class ReconciliationFacadeImpl implements ReconciliationFacade {
                 .orElseThrow(() -> new IllegalArgumentException("batch not found")));
     }
 
+    /** 批次转视图；不含仓储读写。 */
     private static ReconciliationBatchView toView(ReconciliationBatch batch) {
         List<ReconciliationDifferenceView> differences = batch.differences().stream()
                 .map(ReconciliationFacadeImpl::toDifferenceView)
@@ -67,6 +85,7 @@ public class ReconciliationFacadeImpl implements ReconciliationFacade {
                 differences);
     }
 
+    /** 单条差异转视图。 */
     private static ReconciliationDifferenceView toDifferenceView(ReconciliationDifference difference) {
         return new ReconciliationDifferenceView(
                 difference.type().name(),
@@ -76,10 +95,12 @@ public class ReconciliationFacadeImpl implements ReconciliationFacade {
                 difference.channelAmount());
     }
 
+    /** 统计某一类差异条数。 */
     private static int count(ReconciliationBatch batch, DifferenceType type) {
         return (int) batch.differences().stream().filter(difference -> difference.type() == type).count();
     }
 
+    /** 解析业务日；空串拒绝。 */
     private static LocalDate parseDay(String businessDate) {
         if (businessDate == null || businessDate.isBlank()) {
             throw new IllegalArgumentException("businessDate must not be blank");
@@ -87,6 +108,7 @@ public class ReconciliationFacadeImpl implements ReconciliationFacade {
         return LocalDate.parse(businessDate);
     }
 
+    /** 解析账单来源枚举；空串拒绝。 */
     private static BillSource parseSource(String billSource) {
         if (billSource == null || billSource.isBlank()) {
             throw new IllegalArgumentException("billSource must not be blank");
@@ -94,16 +116,24 @@ public class ReconciliationFacadeImpl implements ReconciliationFacade {
         return BillSource.valueOf(billSource);
     }
 
-    private static <T> ApiResponse<T> run(java.util.concurrent.Callable<T> action) {
+    /**
+     * 把参数错误与已处理批次映射为业务码；其余失败写 {@code reconciliation_failed}。
+     * <p>无额外副作用；不改批次状态。
+     */
+    private <T> ApiResponse<T> run(java.util.concurrent.Callable<T> action) {
         try {
             return ApiResponse.ok(action.call());
-        } catch (IllegalArgumentException | IllegalStateException | DateTimeParseException ex) {
+        } catch (IllegalArgumentException | DateTimeParseException ex) {
             ErrorCode code = ex instanceof IllegalArgumentException && ex.getMessage() != null
                     && ex.getMessage().contains("not found")
                     ? ErrorCode.NOT_FOUND
                     : ErrorCode.INVALID_PARAM;
             return ApiResponse.fail(code.getCode(), ex.getMessage());
         } catch (Exception ex) {
+            if (ex instanceof IllegalStateException && "batch already processed".equals(ex.getMessage())) {
+                return ApiResponse.fail(ErrorCode.INVALID_PARAM.getCode(), ex.getMessage());
+            }
+            LOG.error(AlertEvents.failure(AlertEvents.RECONCILIATION_FAILED), ex);
             return ApiResponse.fail(ErrorCode.INTERNAL_ERROR.getCode(), ex.getMessage());
         }
     }
