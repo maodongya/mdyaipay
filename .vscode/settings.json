@@ -4,5 +4,15 @@
   "java.import.maven.recursive": true,
   "java.project.importOnFirstTimeStartup": "automatic",
   "java.test.editor.enableShortcuts": true,
-  "java.compile.nullAnalysis.mode": "disabled"
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.jdt.ls.java.home": "/usr/local/opt/openjdk/libexec/openjdk.jdk/Contents/Home",
+  "java.import.generatesMetadataFilesAtProjectRoot": true,
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "/usr/local/opt/openjdk/libexec/openjdk.jdk/Contents/Home",
+      "default": true
+    }
+  ],
+  "maven.view": "flat"
 }
