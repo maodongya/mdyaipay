@@ -59,4 +59,7 @@ public final class TimeTraceNode {
         children.add(child);
         return child;
     }
+    public TimeTraceNode getParent() {
+        return parent;
+    }
 }
